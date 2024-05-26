@@ -12,6 +12,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          driver: docker-container
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -35,8 +48,8 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:${{ env.NEW_VERSION }}
             ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:cache,mode=max
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
 
       - name: Clean up Docker images
         if: env.NEW_RELEASE == 'true'
