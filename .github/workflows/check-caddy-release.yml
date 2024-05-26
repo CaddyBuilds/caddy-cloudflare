@@ -8,6 +8,8 @@ on:
 permissions:
   contents: read
   packages: write
+  actions: read
+  secrets: write
 
 jobs:
   check-caddy-release:
@@ -67,5 +69,33 @@ jobs:
           NEW_VERSION: ${{ env.NEW_VERSION }}
         run: |
           echo "New version detected, updating PREVIOUS_VERSION secret..."
-          echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
-          gh secret set PREVIOUS_VERSION --body "${NEW_VERSION}"
+          gh api -X PUT \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Content-Type: application/json" \
+            https://api.github.com/repos/${{ github.repository_owner }}/${{ github.repository }} \
+            /actions/secrets/PREVIOUS_VERSION \
+            -d "{\"encrypted_value\":\"${{ steps.check_release.outputs.version }}\"}"
+
+      - name: Notify about new release
+        if: env.NEW_RELEASE == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `A new Caddy version (${env.NEW_VERSION}) has been released and a new Docker image has been built and pushed.`
+            })
+      
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `The workflow to check for new Caddy releases and build the Docker image has failed. Please check the logs for details.`
+            })
