@@ -1,8 +1,8 @@
 name: Build and Push Docker Image
 
 on:
-  release:
-    types: [published]
+  repository_dispatch:
+    types: [caddy-release]
   workflow_dispatch: # Allows manual triggering
 
 permissions:
@@ -37,10 +37,21 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           tags: |
-            ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:${{ github.event.release.tag_name }}
+            ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:${{ github.event.client_payload.latest_version }}
             ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:latest
 
       - name: Clean up Docker images
         run: |
-          docker rmi ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:${{ github.event.release.tag_name }} || true
+          docker rmi ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:${{ github.event.client_payload.latest_version }} || true
           docker builder prune --force
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.client_payload.latest_version }}
+          release_name: "Caddy Release ${{ github.event.client_payload.latest_version }}"
+          body: "New Caddy release detected. See the full release notes [here](https://github.com/caddyserver/caddy/releases/tag/${{ github.event.client_payload.latest_version }})."
+          draft: false
+          prerelease: false

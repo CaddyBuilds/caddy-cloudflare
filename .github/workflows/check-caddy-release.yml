@@ -1,4 +1,4 @@
-name: Check Caddy Releases and Build Docker Image
+name: Check Caddy Releases
 
 on:
   schedule:
@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
- 
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -27,25 +27,28 @@ jobs:
       - name: Check and compare Caddy release
         id: check_release
         run: python scripts/check_caddy_release.py
-    
+
       - name: Update version file
         if: env.IS_NEW_RELEASE == 'true'
         run: |
-          echo "{\"version\": \"${LATEST_VERSION}\"}" > version.json
+          echo "{\"version\": \"${{ env.LATEST_VERSION }}\"}" > version.json
           git config --global user.name "vkartk"
           git config --global user.email "53650724+vkartk@users.noreply.github.com"
           git add version.json
-          git commit -m "Update version to ${LATEST_VERSION}"
+          git commit -m "Update version to ${{ env.LATEST_VERSION }}"
           git push
 
-      - name: Create GitHub Release
+      - name: Trigger Build Workflow
         if: env.IS_NEW_RELEASE == 'true'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/github-script@v7
         with:
-          tag_name: ${{ env.LATEST_VERSION }}
-          release_name: "Caddy Release ${{ env.LATEST_VERSION }}"
-          body: "New Caddy release detected. See the full release notes [here](https://github.com/caddyserver/caddy/releases/tag/${{ env.LATEST_VERSION }})."
-          draft: false
-          prerelease: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.repos.createDispatchEvent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              event_type: 'caddy-release',
+              client_payload: {
+                latest_version: '${{ env.LATEST_VERSION }}'
+              }
+            })
