@@ -14,6 +14,8 @@ Deploy a hassle-free Caddy server with built-in support for Cloudflare DNS-01 AC
 - [Configuration](#configuration)
   - [ACME DNS Challenge Configuration](#acme-dns-challenge-configuration)
   - [Creating a Cloudflare API Token](#creating-a-cloudflare-api-token)
+- [Platform Support](#platform-support)
+  - [Raspberry Pi](#raspberry-pi-support)
 - [Tags](#tags)
 - [Contributing](#contributing)
 - [License](#license)
@@ -23,6 +25,7 @@ Deploy a hassle-free Caddy server with built-in support for Cloudflare DNS-01 AC
 - **Automated Builds**: Automatically checks for new Caddy releases and builds Docker images.
 - **Continuous Integration**: Utilizes GitHub Actions for seamless CI/CD.
 - **Cloudflare DNS Integration**: Integrates Cloudflare DNS for automatic SSL certificate management.
+- **Multi-Platform Support**: Builds images for multiple architectures, including amd64, arm64, and arm/v7 (Raspberry Pi), ensuring compatibility across a wide range of devices and systems.
 - **Manual Trigger**: Allows manual triggering of the build process.
 - **Open Source**: Contributions are welcome under the MIT License.
 
@@ -51,7 +54,7 @@ services:
       - CLOUDFLARE_API_TOKEN=your_cloudflare_api_token
 ```
 Replace `your_cloudflare_api_token` with your actual Cloudflare API token.
-
+## Configuration
 ### Creating a Cloudflare API Token
 
 To use the Cloudflare DNS challenge provider, you'll need to create an API token in your Cloudflare account. Follow these steps to create a token with the necessary permissions:
@@ -137,6 +140,23 @@ The [caddy-cloudflare-docker](https://github.com/cyberverse-dev/caddy-cloudflare
     - **`2.7`**: Minor version tag for the latest patch release within the 2.7 series, allowing for minor updates without breaking changes.
     - **`2`**: Major version tag for the latest release within the 2.x series, providing updates within the major version while maintaining compatibility.
 
+## Platform Support
+
+The `cyberverse-dev/caddy-cloudflare-docker` image is built to support multiple platforms, ensuring compatibility across a wide range of devices and systems. The supported platforms include:
+
+- **linux/amd64**: Standard x86_64 architecture, commonly used in desktop and server environments.
+- **linux/arm64**: ARM 64-bit architecture, used in many modern servers and high-end ARM devices.
+- **linux/arm/v7**: ARM 32-bit architecture, widely used in devices like Raspberry Pi.
+
+### Raspberry Pi Support
+
+This Docker image is optimized for Raspberry Pi, allowing you to deploy Caddy with Cloudflare DNS integration on these popular single-board computers. Whether you are using a Raspberry Pi 3 or the latest Raspberry Pi 4, this image provides the necessary support for seamless operation.
+
+To use the image on a Raspberry Pi, ensure you are running a compatible operating system (such as Raspberry Pi OS) and have Docker installed. You can then pull the image and run it as you would on any other system:
+
+```sh
+docker pull ghcr.io/cyberverse-dev/caddy-cloudflare-docker:latest
+```
 # Building Your Own Docker Image
 If you prefer to build your own Docker image, follow these steps:
 
