@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # Allows manual triggering
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
@@ -40,35 +40,30 @@ jobs:
 
       - name: Check and compare Caddy release
         id: check_release
-        env:
-          PREVIOUS_VERSION: ${{ secrets.PREVIOUS_VERSION }}
         run: python scripts/check_caddy_release.py
       
       - name: Build and push Docker image
-        if: env.NEW_RELEASE == 'true'
+        if: env.IS_NEW_RELEASE == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:${{ env.NEW_VERSION }}
+            ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:${{ env.LATEST_VERSION }}
             ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:latest
 
       - name: Clean up Docker images
-        if: env.NEW_RELEASE == 'true'
+        if: env.IS_NEW_RELEASE == 'true'
         run: |
-          docker rmi ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:${{ env.NEW_VERSION }} || true
+          docker rmi ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:${{ env.LATEST_VERSION }} || true
           docker builder prune --force
 
-      - name: Update previous version secret
-        if: env.NEW_RELEASE == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NEW_VERSION: ${{ env.NEW_VERSION }}
+      - name: Update version file
+        if: env.IS_NEW_RELEASE == 'true'
         run: |
-          echo "New version detected, updating PREVIOUS_VERSION secret..."
-          gh api -X PUT \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Content-Type: application/json" \
-            https://api.github.com/repos/${{ github.repository_owner }}/${{ github.repository }}/actions/secrets/PREVIOUS_VERSION \
-            -d "{\"encrypted_value\":\"${{ steps.check_release.outputs.version }}\"}"
+          echo "{\"version\": \"${LATEST_VERSION}\"}" > version.json
+          git config --global user.name "vkartk"
+          git config --global user.email "53650724+vkartk@users.noreply.github.com"
+          git add version.json
+          git commit -m "Update version to ${LATEST_VERSION}"
+          git push
