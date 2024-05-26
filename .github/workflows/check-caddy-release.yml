@@ -27,43 +27,43 @@ jobs:
         run: python scripts/check_caddy_release.py
       
       - name: Build and publish Docker image
-        if: steps.check_release.outputs.new_release == 'true'
+        if: env.NEW_RELEASE == 'true'
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:${{ steps.check_release.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:${{ env.NEW_VERSION }}
             ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:latest
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:cache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:cache,mode=max
 
       - name: Clean up Docker images
-        if: steps.check_release.outputs.new_release == 'true'
+        if: env.NEW_RELEASE == 'true'
         run: |
-          docker rmi ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:${{ steps.check_release.outputs.version }} || true
+          docker rmi ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:${{ env.NEW_VERSION }} || true
           docker builder prune --force
 
       - name: Update previous version secret
-        if: steps.check_release.outputs.new_release == 'true'
+        if: env.NEW_RELEASE == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NEW_VERSION: ${{ steps.check_release.outputs.version }}
+          NEW_VERSION: ${{ env.NEW_VERSION }}
         run: |
           echo "New version detected, updating PREVIOUS_VERSION secret..."
           echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
           gh secret set PREVIOUS_VERSION --body "${NEW_VERSION}"
 
       - name: Notify about new release
-        if: steps.check_release.outputs.new_release == 'true'
+        if: env.NEW_RELEASE == 'true'
         uses: actions/github-script@v6
         with:
           script: |
-            github.issues.createComment({
+            github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `A new Caddy version (${{ steps.check_release.outputs.version }}) has been released and a new Docker image has been built and pushed.`
+              body: `A new Caddy version (${env.NEW_VERSION}) has been released and a new Docker image has been built and pushed.`
             })
       
       - name: Notify on failure
@@ -71,7 +71,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            github.issues.createComment({
+            github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,

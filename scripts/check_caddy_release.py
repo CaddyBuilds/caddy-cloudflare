@@ -20,13 +20,12 @@ def main():
     print(f"Previous version: {previous_version}")
 
     if latest_version != previous_version:
-        print(f'::set-output name=new_release::true')
-        print(f'::set-output name=version::{latest_version}')
         with open(os.getenv('GITHUB_ENV'), 'a') as env_file:
+            env_file.write(f'NEW_RELEASE=true\n')
             env_file.write(f'NEW_VERSION={latest_version}\n')
     else:
-        print('::set-output name=new_release::false')
-        print(f'Latest version ({latest_version}) is the same as the previous version ({previous_version}).')
+        with open(os.getenv('GITHUB_ENV'), 'a') as env_file:
+            env_file.write(f'NEW_RELEASE=false\n')
 
 if __name__ == "__main__":
     main()
