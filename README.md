@@ -76,16 +76,16 @@ In this configuration, the ACME DNS challenge provider is set globally, so it ap
 example.com {
 
     # Set this path to your site's directory.
-	root * /usr/share/caddy
+    root * /usr/share/caddy
 
-	# Enable the static file server.
-	file_server
+    # Enable the static file server.
+    file_server
 
-	# Another common task is to set up a reverse proxy:
-	# reverse_proxy localhost:8080
+    # Another common task is to set up a reverse proxy:
+    # reverse_proxy localhost:8080
 
-	# Or serve a PHP site through php-fpm:
-	# php_fastcgi localhost:9000
+    # Or serve a PHP site through php-fpm:
+    # php_fastcgi localhost:9000
 
     encode gzip
 
@@ -109,16 +109,17 @@ another-example.com {
 example.com {
   
     # Set this path to your site's directory.
-	root * /usr/share/caddy
+    root * /usr/share/caddy
 
-	# Enable the static file server.
-	file_server
+    # Enable the static file server.
+    file_server
 
-	# Another common task is to set up a reverse proxy:
-	# reverse_proxy localhost:8080
+    # Another common task is to set up a reverse proxy:
+    # reverse_proxy localhost:8080
 
-	# Or serve a PHP site through php-fpm:
-	# php_fastcgi localhost:9000
+    # Or serve a PHP site through php-fpm:
+    # php_fastcgi localhost:9000
+
     encode gzip
 
     tls {
