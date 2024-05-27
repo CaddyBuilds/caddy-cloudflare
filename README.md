@@ -41,19 +41,33 @@ docker pull ghcr.io/cyberverse-dev/caddy-cloudflare-docker:latest
 ```
 You can use the image in your Docker setup. Here is an example `docker-compose.yml` file:
 ```yaml
-version: '3.8'
+version: "3.7"
 
 services:
   caddy:
     image: ghcr.io/cyberverse-dev/caddy-cloudflare-docker:latest
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
     ports:
       - "80:80"
       - "443:443"
+      - "443:443/udp"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
+      - $PWD/Caddyfile:/etc/caddy/Caddyfile
+      - $PWD/site:/srv
+      - caddy_data:/data
+      - caddy_config:/config
     environment:
       - CLOUDFLARE_API_TOKEN=your_cloudflare_api_token
+
+volumes:
+  caddy_data:
+    external: true
+  caddy_config:
 ```
+Defining the data volume as [external](https://docs.docker.com/compose/compose-file/compose-file-v3/#external) makes sure `docker-compose down` does not delete the volume. You may need to create it manually using `docker volume create [project-name]_caddy_data`.
+
 Replace `your_cloudflare_api_token` with your actual Cloudflare API token.
 
 ## Sample Caddyfile
@@ -177,19 +191,32 @@ To use the Cloudflare DNS challenge provider, you'll need to create an API token
 For example, in a Docker environment, you can set this environment variable in your `docker-compose.yml` file:
 
 ```yaml
-version: '3.8'
+version: "3.7"
 
 services:
   caddy:
     image: ghcr.io/cyberverse-dev/caddy-cloudflare-docker:latest
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
     ports:
       - "80:80"
       - "443:443"
+      - "443:443/udp"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
+      - $PWD/Caddyfile:/etc/caddy/Caddyfile
+      - $PWD/site:/srv
+      - caddy_data:/data
+      - caddy_config:/config
     environment:
       - CLOUDFLARE_API_TOKEN=your_cloudflare_api_token
+
+volumes:
+  caddy_data:
+    external: true
+  caddy_config:
 ```
+Defining the data volume as [external](https://docs.docker.com/compose/compose-file/compose-file-v3/#external) makes sure `docker-compose down` does not delete the volume. You may need to create it manually using `docker volume create [project-name]_caddy_data`.
 
 Replace `your_cloudflare_api_token` with the actual token you generated.
 
@@ -206,6 +233,7 @@ This configuration sets up the provider to use the Cloudflare DNS module with th
 
 This setup is the same as specifying the provider in the [tls directive's ACME issuer](https://caddyserver.com/docs/caddyfile/directives/tls#acme) configuration.
 
+[Sample Caddyfile](#sample-caddyfile)
 
 ## Tags
 
@@ -301,19 +329,33 @@ If you prefer to build your own Docker image, follow these steps:
 You can use the built Docker image in your projects. Here is an example of how to use it in a `docker-compose.yml` file:
 
 ```yaml
-version: '3.8'
+version: "3.7"
 
 services:
   caddy:
     image: ghcr.io/YOUR_GITHUB_USERNAME/caddy-cloudflare-docker:latest
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
     ports:
       - "80:80"
       - "443:443"
+      - "443:443/udp"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
+      - $PWD/Caddyfile:/etc/caddy/Caddyfile
+      - $PWD/site:/srv
+      - caddy_data:/data
+      - caddy_config:/config
     environment:
       - CLOUDFLARE_API_TOKEN=your_cloudflare_api_token
+
+volumes:
+  caddy_data:
+    external: true
+  caddy_config:
 ```
+Defining the data volume as [external](https://docs.docker.com/compose/compose-file/compose-file-v3/#external) makes sure `docker-compose down` does not delete the volume. You may need to create it manually using `docker volume create [project-name]_caddy_data`.
+
 Replace `YOUR_GITHUB_USERNAME` with your GitHub username and `your_cloudflare_api_token` with your actual Cloudflare API token.
 
 ## Contributing
