@@ -26,7 +26,7 @@ Deploy a hassle-free Caddy server with built-in support for Cloudflare DNS-01 AC
 - **Automated Builds**: Automatically checks for new Caddy releases and builds Docker images.
 - **Continuous Integration**: Utilizes GitHub Actions for seamless CI/CD.
 - **Cloudflare DNS Integration**: Integrates Cloudflare DNS for automatic SSL certificate management.
-- **Multi-Platform Support**: Builds images for multiple architectures, including `amd64`, `arm64`, `arm/v7` (Raspberry Pi), `386`, `ppc64le`, and `s390x` , ensuring compatibility across a wide range of devices and systems.
+- **Multi-Platform Support**: Builds images for multiple architectures, including `amd64`, `arm64`, `arm/v7` (Raspberry Pi), `ppc64le`, and `s390x` , ensuring compatibility across a wide range of devices and systems.
 - **Alpine-based Image**: Provides a lightweight Alpine-based image for smaller size and faster deployment.
 - **Manual Trigger**: Allows manual triggering of the build process.
 - **Open Source**: Contributions are welcome under the MIT License.
@@ -267,7 +267,6 @@ The `cyberverse-dev/caddy-cloudflare-docker` image is built to support multiple 
 - **linux/amd64**: Standard x86_64 architecture, commonly used in desktop and server environments.
 - **linux/arm64**: ARM 64-bit architecture, used in many modern servers and high-end ARM devices.
 - **linux/arm/v7**: ARM 32-bit architecture, widely used in devices like Raspberry Pi.
-- **linux/386**: Standard 32-bit x86 architecture.
 - **linux/ppc64le**: 64-bit PowerPC Little Endian architecture.
 - **linux/s390x**: 64-bit IBM System z architecture.
 

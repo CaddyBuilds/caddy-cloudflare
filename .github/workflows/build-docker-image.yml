@@ -42,7 +42,7 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386,linux/ppc64le,linux/s390x
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x
           tags: |
             ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:${{ github.event.client_payload.latest_version }}
             ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:latest
@@ -55,7 +55,7 @@ jobs:
           context: .
           file: Dockerfile-alpine
           push: true
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386,linux/ppc64le,linux/s390x
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x
           tags: |
             ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:${{ github.event.client_payload.latest_version }}-alpine
             ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-docker:alpine
