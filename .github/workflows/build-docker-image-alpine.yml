@@ -1,0 +1,83 @@
+name: Build and Push Alpine Docker Image
+
+on:
+  repository_dispatch:
+    types: [caddy-release]
+  workflow_dispatch: # Allows manual triggering
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set version if empty
+        id: set_version
+        run: |
+          if [ -z "${{ github.event.client_payload.latest_version }}" ]; then
+            VERSION=$(cat version.json | jq -r '.version')
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+          else
+            echo "VERSION=${{ github.event.client_payload.latest_version }}" >> $GITHUB_ENV
+          fi
+
+      - name: Build and push Docker image (alpine)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile-alpine
+          push: true
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-alpine:${{ env.VERSION }}
+            ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-alpine:latest
+            ghcr.io/${{ github.repository_owner }}/caddy-cloudflare:${{ env.VERSION }}-alpine
+            ghcr.io/${{ github.repository_owner }}/caddy-cloudflare:alpine
+            ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cloudflare-alpine:${{ env.VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cloudflare-alpine:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cloudflare:${{ env.VERSION }}-alpine
+            ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cloudflare:alpine
+
+      - name: Clean up Docker images
+        run: |
+          docker rmi ghcr.io/${{ github.repository_owner }}/caddy-cloudflare-alpine:${{ env.VERSION }} || true
+          docker rmi ghcr.io/${{ github.repository_owner }}/caddy-cloudflare:${{ env.VERSION }}-alpine || true
+          docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cloudflare-alpine:${{ env.VERSION }} || true
+          docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cloudflare:${{ env.VERSION }}-alpine || true
+          docker builder prune --force
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.VERSION }}-alpine
+          release_name: "Caddy Alpine Release ${{ env.VERSION }}-alpine"
+          body: "New Caddy release detected. See the full release notes [here](https://github.com/caddyserver/caddy/releases/tag/${{ env.VERSION }})."
+          draft: false
+          prerelease: false
