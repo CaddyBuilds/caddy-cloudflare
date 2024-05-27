@@ -26,7 +26,8 @@ Deploy a hassle-free Caddy server with built-in support for Cloudflare DNS-01 AC
 - **Automated Builds**: Automatically checks for new Caddy releases and builds Docker images.
 - **Continuous Integration**: Utilizes GitHub Actions for seamless CI/CD.
 - **Cloudflare DNS Integration**: Integrates Cloudflare DNS for automatic SSL certificate management.
-- **Multi-Platform Support**: Builds images for multiple architectures, including amd64, arm64, and arm/v7 (Raspberry Pi), ensuring compatibility across a wide range of devices and systems.
+- **Multi-Platform Support**: Builds images for multiple architectures, including `amd64`, `arm64`, `arm/v7` (Raspberry Pi), `386`, `ppc64le`, and `s390x` , ensuring compatibility across a wide range of devices and systems.
+- **Alpine-based Image**: Provides a lightweight Alpine-based image for smaller size and faster deployment.
 - **Manual Trigger**: Allows manual triggering of the build process.
 - **Open Source**: Contributions are welcome under the MIT License.
 
@@ -38,6 +39,10 @@ To use the pre-built Docker image, pull it from the GitHub Container Registry:
 
 ```sh
 docker pull ghcr.io/cyberverse-dev/caddy-cloudflare-docker:latest
+docker pull cyberversedev/caddy-cloudflare-docker:latest
+# alpine
+docker pull ghcr.io/cyberverse-dev/caddy-cloudflare-docker:alpine
+docker pull cyberversedev/caddy-cloudflare-docker:alpine
 ```
 You can use the image in your Docker setup. Here is an example `docker-compose.yml` file:
 ```yaml
@@ -237,7 +242,7 @@ This setup is the same as specifying the provider in the [tls directive's ACME i
 
 ## Tags
 
-The [caddy-cloudflare-docker](https://github.com/cyberverse-dev/caddy-cloudflare-docker/pkgs/container/caddy-cloudflare-docker) image on GitHub Container Registry provides the following tags:
+The [caddy-cloudflare-docker](https://github.com/cyberverse-dev/caddy-cloudflare-docker/pkgs/container/caddy-cloudflare-docker) image on GitHub Container Registry and Docker Hub provides the following tags:
 
 - **`latest`**: 
   - Always points to the most recent stable release of Caddy with the Cloudflare DNS module.
@@ -252,6 +257,9 @@ The [caddy-cloudflare-docker](https://github.com/cyberverse-dev/caddy-cloudflare
     - **`2.7`**: Minor version tag for the latest patch release within the 2.7 series, allowing for minor updates without breaking changes.
     - **`2`**: Major version tag for the latest release within the 2.x series, providing updates within the major version while maintaining compatibility.
 
+- `alpine`: Always points to the latest stable release of the Alpine-based image.
+  - `<version>-alpine`: Specific version tags for the Alpine-based image (e.g., `2.7.6-alpine`).
+
 ## Platform Support
 
 The `cyberverse-dev/caddy-cloudflare-docker` image is built to support multiple platforms, ensuring compatibility across a wide range of devices and systems. The supported platforms include:
@@ -259,6 +267,26 @@ The `cyberverse-dev/caddy-cloudflare-docker` image is built to support multiple 
 - **linux/amd64**: Standard x86_64 architecture, commonly used in desktop and server environments.
 - **linux/arm64**: ARM 64-bit architecture, used in many modern servers and high-end ARM devices.
 - **linux/arm/v7**: ARM 32-bit architecture, widely used in devices like Raspberry Pi.
+- **linux/386**: Standard 32-bit x86 architecture.
+- **linux/ppc64le**: 64-bit PowerPC Little Endian architecture.
+- **linux/s390x**: 64-bit IBM System z architecture.
+
+### Alpine Support
+
+The Alpine-based image provides a lightweight alternative, based on the popular Alpine Linux project. Alpine Linux is much smaller than most distribution base images (~5MB), leading to much slimmer images in general.
+
+#### Benefits of Alpine-based Image
+
+- **Smaller Size**: The image size is significantly reduced, which can be beneficial for faster downloads and reduced storage usage.
+- **Minimal Base**: Alpine Linux uses musl libc instead of glibc, making it lightweight. However, this may lead to compatibility issues with software that requires glibc.
+- **Customization**: To keep the image minimal, additional tools (such as git or bash) are not included by default. You can customize the image by adding the necessary packages in your Dockerfile.
+
+To use the Alpine-based image, pull it from the GitHub Container Registry or Docker Hub:
+
+```sh
+docker pull ghcr.io/cyberverse-dev/caddy-cloudflare-docker:alpine
+docker pull cyberversedev/caddy-cloudflare-docker:alpine
+```
 
 ### Raspberry Pi Support
 
@@ -311,7 +339,7 @@ If you prefer to build your own Docker image, follow these steps:
 
 6. **Manually trigger the workflow** (optional):
    - Go to the `Actions` tab in your GitHub repository.
-   - Select the `Check Caddy Releases and Build Docker Image` workflow.
+   - Select the `Build and Push Docker Image` workflow.
    - Click the `Run workflow` button to trigger the build process manually.
 
 7. **Monitor the workflow**:
