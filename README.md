@@ -11,6 +11,7 @@ Deploy a hassle-free Caddy server with built-in support for Cloudflare DNS-01 AC
 - [Usage](#usage)
   - [Using the Pre-built Docker Image](#using-the-pre-built-docker-image)
   - [Building Your Own Docker Image](#building-your-own-docker-image)
+  - [Sample Caddyfile](#sample-caddyfile)
 - [Configuration](#configuration)
   - [ACME DNS Challenge Configuration](#acme-dns-challenge-configuration)
   - [Creating a Cloudflare API Token](#creating-a-cloudflare-api-token)
@@ -54,6 +55,88 @@ services:
       - CLOUDFLARE_API_TOKEN=your_cloudflare_api_token
 ```
 Replace `your_cloudflare_api_token` with your actual Cloudflare API token.
+
+## Sample Caddyfile
+Here is a sample Caddyfile configuration to get you started. This configuration sets up the ACME DNS challenge provider to use Cloudflare and serves a simple static site.
+
+### Global Configuration (Use DNS Challenge for All Sites)
+In this configuration, the ACME DNS challenge provider is set globally, so it applies to all sites served by Caddy.
+
+```
+# To use your own domain name (with automatic HTTPS), first make
+# sure your domain's A/AAAA DNS records are properly pointed to
+# this machine's public IP, then replace "example.com" below with your
+# domain name.
+
+{
+  # Set the ACME DNS challenge provider to use Cloudflare for all sites
+  acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+}
+
+example.com {
+
+    # Set this path to your site's directory.
+	root * /usr/share/caddy
+
+	# Enable the static file server.
+	file_server
+
+	# Another common task is to set up a reverse proxy:
+	# reverse_proxy localhost:8080
+
+	# Or serve a PHP site through php-fpm:
+	# php_fastcgi localhost:9000
+
+    encode gzip
+
+    tls {
+      # No need to specify dns here, it's already set globally
+    }
+}
+
+another-example.com {
+    root * /usr/share/caddy
+    file_server
+    encode gzip
+
+    tls {
+        # No need to specify dns here, it's already set globally
+    }
+}
+```
+### Per-site Configuration
+```
+example.com {
+  
+    # Set this path to your site's directory.
+	root * /usr/share/caddy
+
+	# Enable the static file server.
+	file_server
+
+	# Another common task is to set up a reverse proxy:
+	# reverse_proxy localhost:8080
+
+	# Or serve a PHP site through php-fpm:
+	# php_fastcgi localhost:9000
+    encode gzip
+
+    tls {
+        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+    }
+}
+
+another-example.com {
+    root * /usr/share/caddy
+    file_server
+    encode gzip
+
+    tls {
+        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+    }
+}
+```
+
 ## Configuration
 ### Creating a Cloudflare API Token
 
@@ -97,7 +180,7 @@ version: '3.8'
 
 services:
   caddy:
-    image: ghcr.io/YOUR_GITHUB_USERNAME/caddy-cloudflare-docker:latest
+    image: ghcr.io/cyberverse-dev/caddy-cloudflare-docker:latest
     ports:
       - "80:80"
       - "443:443"
