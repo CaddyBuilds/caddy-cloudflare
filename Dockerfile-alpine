@@ -1,5 +1,5 @@
 # Build stage
-FROM caddy:builder AS builder
+FROM caddy:builder-alpine AS builder
 
 # Build Caddy with the Cloudflare DNS module
 RUN xcaddy build \
