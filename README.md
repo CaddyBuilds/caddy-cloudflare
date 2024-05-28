@@ -38,11 +38,11 @@ Deploy a hassle-free Caddy server with built-in support for Cloudflare DNS-01 AC
 To use the pre-built Docker image, pull it from the GitHub Container Registry:
 
 ```sh
-docker pull ghcr.io/cyberverse-dev/caddy-cloudflare:latest
-docker pull cyberversedev/caddy-cloudflare:latest
+docker pull ghcr.io/caddybuilds/caddy-cloudflare:latest
+docker pull caddybuilds/caddy-cloudflare:latest
 # alpine
-docker pull ghcr.io/cyberverse-dev/caddy-cloudflare:alpine
-docker pull cyberversedev/caddy-cloudflare:alpine
+docker pull ghcr.io/caddybuilds/caddy-cloudflare:alpine
+docker pull caddybuilds/caddy-cloudflare:alpine
 ```
 You can use the image in your Docker setup. Here is an example `docker-compose.yml` file:
 ```yaml
@@ -50,7 +50,7 @@ version: "3.7"
 
 services:
   caddy:
-    image: ghcr.io/cyberverse-dev/caddy-cloudflare:latest
+    image: ghcr.io/caddybuilds/caddy-cloudflare:latest
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
@@ -71,7 +71,7 @@ volumes:
     external: true
   caddy_config:
 ```
-Defining the data volume as [external](https://docs.docker.com/compose/compose-file/compose-file-v3/#external) makes sure `docker-compose down` does not delete the volume. You may need to create it manually using `docker volume create [project-name]_caddy_data`.
+Defining the data volume as [external](https://docs.docker.com/compose/compose-file/compose-file-v3/#external) makes sure `docker-compose down` does not delete the volume. You may need to create it manually using `docker volume create caddy_data`.
 
 Replace `your_cloudflare_api_token` with your actual Cloudflare API token.
 
@@ -200,7 +200,7 @@ version: "3.7"
 
 services:
   caddy:
-    image: ghcr.io/cyberverse-dev/caddy-cloudflare:latest
+    image: ghcr.io/caddybuilds/caddy-cloudflare:latest
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
@@ -221,7 +221,7 @@ volumes:
     external: true
   caddy_config:
 ```
-Defining the data volume as [external](https://docs.docker.com/compose/compose-file/compose-file-v3/#external) makes sure `docker-compose down` does not delete the volume. You may need to create it manually using `docker volume create [project-name]_caddy_data`.
+Defining the data volume as [external](https://docs.docker.com/compose/compose-file/compose-file-v3/#external) makes sure `docker-compose down` does not delete the volume. You may need to create it manually using `docker volume create caddy_data`.
 
 Replace `your_cloudflare_api_token` with the actual token you generated.
 
@@ -242,7 +242,7 @@ This setup is the same as specifying the provider in the [tls directive's ACME i
 
 ## Tags
 
-The [caddy-cloudflare](https://github.com/cyberverse-dev/caddy-cloudflare/pkgs/container/caddy-cloudflare) image on GitHub Container Registry and Docker Hub provides the following tags:
+The [caddy-cloudflare](https://github.com/caddybuilds/caddy-cloudflare/pkgs/container/caddy-cloudflare) image on GitHub Container Registry and Docker Hub provides the following tags:
 
 - **`latest`**: 
   - Always points to the most recent stable release of Caddy with the Cloudflare DNS module.
@@ -253,7 +253,7 @@ The [caddy-cloudflare](https://github.com/cyberverse-dev/caddy-cloudflare/pkgs/c
   - Examples include:
     - **`2.7.6`**: Full version tag for Caddy version 2.7.6, ensuring you are using this exact release. 
     
-         (eg: ```docker pull ghcr.io/cyberverse-dev/caddy-cloudflare:v2.7.6``` )
+         (eg: ```docker pull ghcr.io/caddybuilds/caddy-cloudflare:v2.7.6``` )
     - **`2.7`**: Minor version tag for the latest patch release within the 2.7 series, allowing for minor updates without breaking changes.
     - **`2`**: Major version tag for the latest release within the 2.x series, providing updates within the major version while maintaining compatibility.
 
@@ -262,7 +262,7 @@ The [caddy-cloudflare](https://github.com/cyberverse-dev/caddy-cloudflare/pkgs/c
 
 ## Platform Support
 
-The `cyberverse-dev/caddy-cloudflare` image is built to support multiple platforms, ensuring compatibility across a wide range of devices and systems. The supported platforms include:
+The `caddybuilds/caddy-cloudflare` image is built to support multiple platforms, ensuring compatibility across a wide range of devices and systems. The supported platforms include:
 
 - **linux/amd64**: Standard x86_64 architecture, commonly used in desktop and server environments.
 - **linux/arm64**: ARM 64-bit architecture, used in many modern servers and high-end ARM devices.
@@ -283,8 +283,8 @@ The Alpine-based image provides a lightweight alternative, based on the popular 
 To use the Alpine-based image, pull it from the GitHub Container Registry or Docker Hub:
 
 ```sh
-docker pull ghcr.io/cyberverse-dev/caddy-cloudflare:alpine
-docker pull cyberversedev/caddy-cloudflare:alpine
+docker pull ghcr.io/caddybuilds/caddy-cloudflare:alpine
+docker pull caddybuilds/caddy-cloudflare:alpine
 ```
 
 ### Raspberry Pi Support
@@ -294,7 +294,7 @@ This Docker image is optimized for Raspberry Pi, allowing you to deploy Caddy wi
 To use the image on a Raspberry Pi, ensure you are running a compatible operating system (such as Raspberry Pi OS) and have Docker installed. You can then pull the image and run it as you would on any other system:
 
 ```sh
-docker pull ghcr.io/cyberverse-dev/caddy-cloudflare:latest
+docker pull ghcr.io/caddybuilds/caddy-cloudflare:latest
 ```
 # Building Your Own Docker Image
 If you prefer to build your own Docker image, follow these steps:
@@ -310,7 +310,7 @@ If you prefer to build your own Docker image, follow these steps:
 
 ## Setup Instructions
 
-1. **[Fork this repository](https://github.com/cyberverse-dev/caddy-cloudflare/fork)** to your GitHub account.
+1. **[Fork this repository](https://github.com/caddybuilds/caddy-cloudflare/fork)** to your GitHub account.
 
 2. **Clone the forked repository** to your local machine:
    ```sh
@@ -381,7 +381,7 @@ volumes:
     external: true
   caddy_config:
 ```
-Defining the data volume as [external](https://docs.docker.com/compose/compose-file/compose-file-v3/#external) makes sure `docker-compose down` does not delete the volume. You may need to create it manually using `docker volume create [project-name]_caddy_data`.
+Defining the data volume as [external](https://docs.docker.com/compose/compose-file/compose-file-v3/#external) makes sure `docker-compose down` does not delete the volume. You may need to create it manually using `docker volume create caddy_data`.
 
 Replace `YOUR_GITHUB_USERNAME` with your GitHub username and `your_cloudflare_api_token` with your actual Cloudflare API token.
 
