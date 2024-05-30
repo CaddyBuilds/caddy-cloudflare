@@ -3,7 +3,11 @@ name: Build and Push Standard Docker Image
 on:
   repository_dispatch:
     types: [caddy-release]
-  workflow_dispatch: # Allows manual triggering
+  workflow_dispatch:
+    inputs:
+      build_version:
+        description: 'Caddy version to build (without v prefix, e.g., 2.8.0)'
+        required: false
 
 permissions:
   contents: write
@@ -39,13 +43,14 @@ jobs:
       - name: Set version if empty
         id: set_version
         run: |
-          if [ -z "${{ github.event.client_payload.latest_version }}" ]; then
-            VERSION=$(cat version.json | jq -r '.version' | sed 's/^v//')
-            echo "VERSION=$VERSION" >> $GITHUB_ENV
-          else
+          if [ -n "${{ github.event.inputs.build_version }}" ]; then
+            VERSION=$(echo "${{ github.event.inputs.build_version }}" | sed 's/^v//')
+          elif [ -n "${{ github.event.client_payload.latest_version }}" ]; then
             VERSION=$(echo "${{ github.event.client_payload.latest_version }}" | sed 's/^v//')
-            echo "VERSION=$VERSION" >> $GITHUB_ENV
+          else
+            VERSION=$(cat version.json | jq -r '.version' | sed 's/^v//')
           fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Check Caddy version availability
         id: check_version
