@@ -253,7 +253,7 @@ The [caddy-cloudflare](https://github.com/caddybuilds/caddy-cloudflare/pkgs/cont
   - Examples include:
     - **`2.7.6`**: Full version tag for Caddy version 2.7.6, ensuring you are using this exact release. 
     
-         (eg: ```docker pull ghcr.io/caddybuilds/caddy-cloudflare:v2.7.6``` )
+         (eg: ```docker pull ghcr.io/caddybuilds/caddy-cloudflare:2.8.0``` )
     - **`2.7`**: Minor version tag for the latest patch release within the 2.7 series, allowing for minor updates without breaking changes.
     - **`2`**: Major version tag for the latest release within the 2.x series, providing updates within the major version while maintaining compatibility.
 
