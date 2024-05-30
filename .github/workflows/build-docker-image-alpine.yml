@@ -16,6 +16,7 @@ permissions:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    timeout-minutes: 720  # Set the timeout to 12 hours
 
     steps:
       - name: Checkout
@@ -55,16 +56,30 @@ jobs:
       - name: Check Caddy version availability
         id: check_version
         run: |
-          AVAILABLE_BUILDER_ALPINE=$(curl -sL https://hub.docker.com/v2/repositories/library/caddy/tags/${{ env.VERSION }}-builder-alpine | jq -r '.name')
-          AVAILABLE_BASE_ALPINE=$(curl -sL https://hub.docker.com/v2/repositories/library/caddy/tags/${{ env.VERSION }}-alpine | jq -r '.name')
-          if [ "$AVAILABLE_BUILDER_ALPINE" != "${{ env.VERSION }}-builder-alpine" ]; then
-            echo "Caddy builder version ${{ env.VERSION }}-builder-alpine is not available. Exiting."
-            exit 1
-          fi
-          if [ "$AVAILABLE_BASE_ALPINE" != "${{ env.VERSION }}-alpine" ]; then
-            echo "Caddy base version ${{ env.VERSION }}-alpine is not available. Exiting."
-            exit 1
-          fi
+          RETRY_COUNT=0
+          MAX_RETRIES=12
+          SLEEP_INTERVAL=3600  # 1 hour in seconds
+
+          check_availability() {
+            AVAILABLE_BUILDER_ALPINE=$(curl -sL https://hub.docker.com/v2/repositories/library/caddy/tags/${{ env.VERSION }}-builder-alpine | jq -r '.name')
+            AVAILABLE_BASE_ALPINE=$(curl -sL https://hub.docker.com/v2/repositories/library/caddy/tags/${{ env.VERSION }}-alpine | jq -r '.name')
+            if [ "$AVAILABLE_BUILDER_ALPINE" = "${{ env.VERSION }}-builder-alpine" ] && [ "$AVAILABLE_BASE_ALPINE" = "${{ env.VERSION }}-alpine" ]; then
+              return 0
+            else
+              return 1
+            fi
+          }
+
+          until check_availability; do
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+              echo "Caddy version ${{ env.VERSION }}-builder-alpine or ${{ env.VERSION }}-alpine is not available after $MAX_RETRIES retries. Triggering caddy-release event."
+              curl -X POST -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/${{ github.repository }}/dispatches --data '{"event_type":"caddy-release"}'
+              exit 1
+            fi
+            echo "Caddy version ${{ env.VERSION }}-builder-alpine or ${{ env.VERSION }}-alpine is not available. Retrying in $SLEEP_INTERVAL seconds..."
+            sleep $SLEEP_INTERVAL
+          done
 
       - name: Build and push Docker image (alpine)
         uses: docker/build-push-action@v5
