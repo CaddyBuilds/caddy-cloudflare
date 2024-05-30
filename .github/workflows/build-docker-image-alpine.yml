@@ -94,8 +94,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.VERSION }}
-          release_name: "Caddy Release ${{ env.VERSION }}"
+          tag_name: ${{ env.VERSION }}-alpine
+          release_name: "Caddy Alpine Release ${{ env.VERSION }}"
           body: "New Caddy release detected. See the full release notes [here](https://github.com/caddyserver/caddy/releases/tag/${{ env.VERSION }})."
           draft: false
           prerelease: false
