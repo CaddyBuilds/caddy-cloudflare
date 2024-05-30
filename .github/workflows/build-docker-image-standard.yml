@@ -50,9 +50,14 @@ jobs:
       - name: Check Caddy version availability
         id: check_version
         run: |
-          AVAILABLE=$(curl -sL https://hub.docker.com/v2/repositories/library/caddy/tags/${{ env.VERSION }} | jq -r '.name')
-          if [ "$AVAILABLE" != "${{ env.VERSION }}" ]; then
-            echo "Caddy version ${{ env.VERSION }} is not available. Exiting."
+          AVAILABLE_BUILDER=$(curl -sL https://hub.docker.com/v2/repositories/library/caddy/tags/${{ env.VERSION }}-builder | jq -r '.name')
+          AVAILABLE_BASE=$(curl -sL https://hub.docker.com/v2/repositories/library/caddy/tags/${{ env.VERSION }} | jq -r '.name')
+          if [ "$AVAILABLE_BUILDER" != "${{ env.VERSION }}-builder" ]; then
+            echo "Caddy builder version ${{ env.VERSION }}-builder is not available. Exiting."
+            exit 1
+          fi
+          if [ "$AVAILABLE_BASE" != "${{ env.VERSION }}" ]; then
+            echo "Caddy base version ${{ env.VERSION }} is not available. Exiting."
             exit 1
           fi
 

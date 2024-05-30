@@ -1,12 +1,13 @@
 # Build stage
-FROM caddy:builder-alpine AS builder
+ARG CADDY_VERSION
+FROM caddy:${CADDY_VERSION}-builder-alpine AS builder
 
 # Build Caddy with the Cloudflare DNS module
 RUN xcaddy build \
     --with github.com/caddy-dns/cloudflare
 
 # Final stage
-FROM caddy:alpine
+FROM caddy:${CADDY_VERSION}-alpine
 
 # Copy the custom-built Caddy binary
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
