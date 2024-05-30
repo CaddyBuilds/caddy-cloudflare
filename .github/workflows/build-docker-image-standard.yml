@@ -40,10 +40,11 @@ jobs:
         id: set_version
         run: |
           if [ -z "${{ github.event.client_payload.latest_version }}" ]; then
-            VERSION=$(cat version.json | jq -r '.version')
+            VERSION=$(cat version.json | jq -r '.version' | sed 's/^v//')
             echo "VERSION=$VERSION" >> $GITHUB_ENV
           else
-            echo "VERSION=${{ github.event.client_payload.latest_version }}" >> $GITHUB_ENV
+            VERSION=$(echo "${{ github.event.client_payload.latest_version }}" | sed 's/^v//')
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
           fi
 
       - name: Check Caddy version availability
