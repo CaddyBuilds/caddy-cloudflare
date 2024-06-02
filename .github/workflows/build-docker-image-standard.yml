@@ -16,7 +16,6 @@ permissions:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    timeout-minutes: 720  # Set the timeout to 12 hours
 
     steps:
       - name: Checkout
@@ -57,7 +56,7 @@ jobs:
         id: check_version
         run: |
           RETRY_COUNT=0
-          MAX_RETRIES=12
+          MAX_RETRIES=5
           SLEEP_INTERVAL=3600  # 1 hour in seconds
 
           check_availability() {
