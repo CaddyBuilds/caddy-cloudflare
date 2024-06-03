@@ -13,6 +13,10 @@ permissions:
   contents: write
   packages: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -72,8 +76,8 @@ jobs:
           until check_availability; do
             RETRY_COUNT=$((RETRY_COUNT + 1))
             if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-              echo "Caddy version ${{ env.VERSION }}-builder or ${{ env.VERSION }} is not available after $MAX_RETRIES retries. Triggering caddy-release event."
-              curl -X POST -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/${{ github.repository }}/dispatches --data '{"event_type":"caddy-release"}'
+              echo "Caddy version ${{ env.VERSION }}-builder or ${{ env.VERSION }} is not available after $MAX_RETRIES retries. Triggering workflow again."
+              curl -X POST -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/${{ github.repository }}/actions/workflows/${{ github.workflow }}/dispatches --data "{\"ref\":\"${{ github.ref }}\"}"
               exit 1
             fi
             echo "Caddy version ${{ env.VERSION }}-builder or ${{ env.VERSION }} is not available. Retrying in $SLEEP_INTERVAL seconds..."
