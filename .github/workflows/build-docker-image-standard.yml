@@ -2,7 +2,7 @@ name: Build and Push Standard Docker Image
 
 on:
   repository_dispatch:
-    types: [caddy-release]
+    types: [caddy-release, build-standard-image]
   workflow_dispatch:
     inputs:
       build_version:
@@ -77,14 +77,28 @@ jobs:
             RETRY_COUNT=$((RETRY_COUNT + 1))
             if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
               echo "Caddy version ${{ env.VERSION }}-builder or ${{ env.VERSION }} is not available after $MAX_RETRIES retries. Triggering workflow again."
-              curl -X POST -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/${{ github.repository }}/actions/workflows/${{ github.workflow }}/dispatches --data "{\"ref\":\"${{ github.ref }}\"}"
+              echo "DEPENDENCIES_AVAILABILITY=false" >> $GITHUB_ENV
               exit 1
             fi
             echo "Caddy version ${{ env.VERSION }}-builder or ${{ env.VERSION }} is not available. Retrying in $SLEEP_INTERVAL seconds..."
             sleep $SLEEP_INTERVAL
           done
+          echo "DEPENDENCIES_AVAILABILITY=true" >> $GITHUB_ENV
+
+       - name: Trigger Build Workflow
+        if: env.DEPENDENCIES_AVAILABILITY == 'false'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.repos.createDispatchEvent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              event_type: 'build-standard-image',
+            })
 
       - name: Build and push Docker image (standard)
+        if: env.DEPENDENCIES_AVAILABILITY == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -100,12 +114,14 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cloudflare:latest
 
       - name: Clean up Docker images
+        if: env.DEPENDENCIES_AVAILABILITY == 'true'
         run: |
           docker rmi ghcr.io/${{ secrets.DOCKER_USERNAME }}/caddy-cloudflare:${{ env.VERSION }} || true
           docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cloudflare:${{ env.VERSION }} || true
           docker builder prune --force
 
       - name: Create GitHub Release
+        if: env.DEPENDENCIES_AVAILABILITY == 'true'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
