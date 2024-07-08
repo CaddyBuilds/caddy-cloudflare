@@ -129,6 +129,6 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}-alpine
           release_name: "Caddy Alpine v${{ env.VERSION }}"
-          body: "New Caddy release detected. See the full release notes [here](https://github.com/caddyserver/caddy/releases/tag/${{ env.VERSION }})."
+          body: "New Caddy release detected. See the full release notes [here](https://github.com/caddyserver/caddy/releases/tag/v${{ env.VERSION }})."
           draft: false
           prerelease: false
