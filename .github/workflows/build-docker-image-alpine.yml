@@ -74,13 +74,14 @@ jobs:
           }
 
           until check_availability; do
-            RETRY_COUNT=$((RETRY_COUNT + 1))
+            
             if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
               echo "Caddy version ${{ env.VERSION }}-builder-alpine or ${{ env.VERSION }}-alpine is not available after $MAX_RETRIES retries. Triggering workflow again."
               echo "DEPENDENCIES_AVAILABILITY=false" >> $GITHUB_ENV
             fi
             echo "Caddy version ${{ env.VERSION }}-builder-alpine or ${{ env.VERSION }}-alpine is not available. Retrying in $SLEEP_INTERVAL seconds..."
             sleep $SLEEP_INTERVAL
+            RETRY_COUNT=$((RETRY_COUNT + 1))
           done
           echo "DEPENDENCIES_AVAILABILITY=true" >> $GITHUB_ENV
 
