@@ -44,6 +44,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Convert GITHUB_USERNAME to lowercase
+        run: |
+          echo "GITHUB_USERNAME=${{ github.actor,, }}" >> $GITHUB_ENV
+
       - name: Set version if empty
         id: set_version
         run: |
@@ -112,15 +116,15 @@ jobs:
             CADDY_VERSION=${{ env.VERSION }}
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x
           tags: |
-            ghcr.io/${{ secrets.DOCKER_USERNAME }}/caddy-cloudflare:${{ env.VERSION }}
-            ghcr.io/${{ secrets.DOCKER_USERNAME }}/caddy-cloudflare:latest
+            ghcr.io/${{ env.GITHUB_USERNAME }}/caddy-cloudflare:${{ env.VERSION }}
+            ghcr.io/${{ env.GITHUB_USERNAME }}/caddy-cloudflare:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cloudflare:${{ env.VERSION }}
             ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cloudflare:latest
 
       - name: Clean up Docker images
         if: env.DEPENDENCIES_AVAILABILITY == 'true'
         run: |
-          docker rmi ghcr.io/${{ secrets.DOCKER_USERNAME }}/caddy-cloudflare:${{ env.VERSION }} || true
+          docker rmi ghcr.io/${{ env.GITHUB_USERNAME }}/caddy-cloudflare:${{ env.VERSION }} || true
           docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cloudflare:${{ env.VERSION }} || true
           docker builder prune --force
 
