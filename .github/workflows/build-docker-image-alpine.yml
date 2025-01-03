@@ -46,7 +46,7 @@ jobs:
 
       - name: Convert GITHUB_USERNAME to lowercase
         run: |
-          echo "GITHUB_USERNAME=${github.actor@L}" >> $GITHUB_ENV
+          echo "GITHUB_USERNAME=$(echo ${{ github.actor }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Set version if empty
         id: set_version
