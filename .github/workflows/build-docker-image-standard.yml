@@ -44,9 +44,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract Repository Owner and Convert to Lowercase
+      - name: Convert Repository Owner to Lowercase
         run: |
-          REPO_OWNER=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f1 | tr '[:upper:]' '[:lower:]')
+          echo "GITHUB_REPOSITORY_OWNER: ${GITHUB_REPOSITORY_OWNER}"
+          REPO_OWNER=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
           echo "REPO_OWNER=${REPO_OWNER}" >> $GITHUB_ENV
 
       - name: Set version if empty
