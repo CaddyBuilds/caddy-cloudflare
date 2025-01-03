@@ -78,12 +78,16 @@ jobs:
             if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
               echo "Caddy version ${{ env.VERSION }}-builder or ${{ env.VERSION }} is not available after $MAX_RETRIES retries. Setting environment variable to trigger job again."
               echo "DEPENDENCIES_AVAILABILITY=false" >> $GITHUB_ENV
+              break
             fi
             echo "Caddy version ${{ env.VERSION }}-builder or ${{ env.VERSION }} is not available. Retrying in $SLEEP_INTERVAL seconds..."
             sleep $SLEEP_INTERVAL
             RETRY_COUNT=$((RETRY_COUNT + 1))
           done
-          echo "DEPENDENCIES_AVAILABILITY=true" >> $GITHUB_ENV
+          
+          if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+            echo "DEPENDENCIES_AVAILABILITY=true" >> $GITHUB_ENV
+          fi
 
       - name: Trigger Build Workflow
         if: env.DEPENDENCIES_AVAILABILITY == 'false'
