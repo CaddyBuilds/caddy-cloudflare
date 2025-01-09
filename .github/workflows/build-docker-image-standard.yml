@@ -116,7 +116,7 @@ jobs:
           push: true
           build-args: |
             CADDY_VERSION=${{ env.VERSION }}
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           tags: |
             ghcr.io/${{ env.REPO_OWNER }}/caddy-cloudflare:${{ env.VERSION }}
             ghcr.io/${{ env.REPO_OWNER }}/caddy-cloudflare:latest
