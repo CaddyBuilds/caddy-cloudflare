@@ -55,8 +55,8 @@ jobs:
         run: |
           if [ -n "${{ github.event.inputs.build_version }}" ]; then
             VERSION=$(echo "${{ github.event.inputs.build_version }}" | sed 's/^v//')
-          elif [ -n "${{ github.event.client_payload.latest_version }}" ]; then
-            VERSION=$(echo "${{ github.event.client_payload.latest_version }}" | sed 's/^v//')
+          elif [ -n "${{ github.event.client_payload.caddy_version }}" ]; then
+            VERSION=$(echo "${{ github.event.client_payload.caddy_version }}" | sed 's/^v//')
           else
             VERSION=$(cat version.json | jq -r '.version' | sed 's/^v//')
           fi
