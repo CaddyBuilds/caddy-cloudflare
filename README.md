@@ -46,8 +46,6 @@ docker pull caddybuilds/caddy-cloudflare:alpine
 ```
 You can use the image in your Docker setup. Here is an example `docker-compose.yml` file:
 ```yaml
-version: "3.7"
-
 services:
   caddy:
     image: ghcr.io/caddybuilds/caddy-cloudflare:latest
@@ -196,8 +194,6 @@ To use the Cloudflare DNS challenge provider, you'll need to create an API token
 For example, in a Docker environment, you can set this environment variable in your `docker-compose.yml` file:
 
 ```yaml
-version: "3.7"
-
 services:
   caddy:
     image: ghcr.io/caddybuilds/caddy-cloudflare:latest
@@ -356,8 +352,6 @@ If you prefer to build your own Docker image, follow these steps:
 You can use the built Docker image in your projects. Here is an example of how to use it in a `docker-compose.yml` file:
 
 ```yaml
-version: "3.7"
-
 services:
   caddy:
     image: ghcr.io/YOUR_GITHUB_USERNAME/caddy-cloudflare:latest
