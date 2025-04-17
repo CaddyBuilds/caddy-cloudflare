@@ -2,7 +2,7 @@ name: Build and Push Standard Docker Image
 
 on:
   repository_dispatch:
-    types: [caddy-release, build-standard-image]
+    types: [caddy-release]
   workflow_dispatch:
     inputs:
       build_version:
@@ -46,69 +46,51 @@ jobs:
 
       - name: Convert Repository Owner to Lowercase
         run: |
-          echo "GITHUB_REPOSITORY_OWNER: ${GITHUB_REPOSITORY_OWNER}"
           REPO_OWNER=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
           echo "REPO_OWNER=${REPO_OWNER}" >> $GITHUB_ENV
 
-      - name: Set version if empty
+      - name: Set version
         id: set_version
         run: |
-          if [ -n "${{ github.event.inputs.build_version }}" ]; then
-            VERSION=$(echo "${{ github.event.inputs.build_version }}" | sed 's/^v//')
-          elif [ -n "${{ github.event.client_payload.caddy_version }}" ]; then
-            VERSION=$(echo "${{ github.event.client_payload.caddy_version }}" | sed 's/^v//')
-          else
-            VERSION=$(cat version.json | jq -r '.version' | sed 's/^v//')
-          fi
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          # Get version from input or payload
+          VERSION="${{ github.event.inputs.build_version || github.event.client_payload.caddy_version }}"
 
-      - name: Check Caddy version availability
-        id: check_version
-        run: |
-          RETRY_COUNT=0
-          MAX_RETRIES=5
-          SLEEP_INTERVAL=3600  # 1 hour in seconds
-
-          check_availability() {
-            AVAILABLE_BUILDER=$(curl -sL https://hub.docker.com/v2/repositories/library/caddy/tags/${{ env.VERSION }}-builder | jq -r '.name')
-            AVAILABLE_BASE=$(curl -sL https://hub.docker.com/v2/repositories/library/caddy/tags/${{ env.VERSION }} | jq -r '.name')
-            if [ "$AVAILABLE_BUILDER" = "${{ env.VERSION }}-builder" ] && [ "$AVAILABLE_BASE" = "${{ env.VERSION }}" ]; then
-              return 0
-            else
-              return 1
-            fi
-          }
-
-          until check_availability; do
-            
-            if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-              echo "Caddy version ${{ env.VERSION }}-builder or ${{ env.VERSION }} is not available after $MAX_RETRIES retries. Setting environment variable to trigger job again."
-              echo "DEPENDENCIES_AVAILABILITY=false" >> $GITHUB_ENV
-              break
-            fi
-            echo "Caddy version ${{ env.VERSION }}-builder or ${{ env.VERSION }} is not available. Retrying in $SLEEP_INTERVAL seconds..."
-            sleep $SLEEP_INTERVAL
-            RETRY_COUNT=$((RETRY_COUNT + 1))
-          done
-          
-          if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-            echo "DEPENDENCIES_AVAILABILITY=true" >> $GITHUB_ENV
+          # Exit if no version specified
+          if [ -z "$VERSION" ]; then
+            echo "No version specified. Exiting."
+            exit 1
           fi
 
-      - name: Trigger Build Workflow
-        if: env.DEPENDENCIES_AVAILABILITY == 'false'
-        uses: actions/github-script@v7
+          # Strip v prefix if present
+          VERSION="${VERSION#v}"
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
+      - name: Docker Metadata
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.rest.repos.createDispatchEvent({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              event_type: 'build-standard-image',
-            })
+          images: |
+            ghcr.io/${{ env.REPO_OWNER }}/caddy-cloudflare
+            ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cloudflare
+          tags: |
+            # Raw version tags
+            type=raw,value=${{ env.VERSION }}
+            type=raw,value=latest
+            # Semver tagging strategy
+            type=semver,pattern={{version}},value=${{ env.VERSION }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.VERSION }}
+            type=semver,pattern={{major}},value=${{ env.VERSION }}
+          labels: |
+            org.opencontainers.image.title=Caddy Cloudflare
+            org.opencontainers.image.description=Caddy with Cloudflare DNS module
+            org.opencontainers.image.url=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.version=${{ env.VERSION }}
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
 
-      - name: Build and push Docker image (standard)
-        if: env.DEPENDENCIES_AVAILABILITY == 'true'
+      - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -117,27 +99,14 @@ jobs:
           build-args: |
             CADDY_VERSION=${{ env.VERSION }}
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x
-          tags: |
-            ghcr.io/${{ env.REPO_OWNER }}/caddy-cloudflare:${{ env.VERSION }}
-            ghcr.io/${{ env.REPO_OWNER }}/caddy-cloudflare:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cloudflare:${{ env.VERSION }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cloudflare:latest
-
-      - name: Clean up Docker images
-        if: env.DEPENDENCIES_AVAILABILITY == 'true'
-        run: |
-          docker rmi ghcr.io/${{ env.REPO_OWNER }}/caddy-cloudflare:${{ env.VERSION }} || true
-          docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cloudflare:${{ env.VERSION }} || true
-          docker builder prune --force
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
       - name: Create GitHub Release
-        if: env.DEPENDENCIES_AVAILABILITY == 'true'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.VERSION }}
-          release_name: "Caddy v${{ env.VERSION }}"
+          name: "Caddy v${{ env.VERSION }}"
           body: "New Caddy release detected. See the full release notes [here](https://github.com/caddyserver/caddy/releases/tag/v${{ env.VERSION }})."
           draft: false
           prerelease: false
