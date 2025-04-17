@@ -75,7 +75,6 @@ jobs:
           tags: |
             # Raw version tags
             type=raw,value=${{ env.VERSION }}
-            type=raw,value=latest
             # Semver tagging strategy
             type=semver,pattern={{version}},value=${{ env.VERSION }}
             type=semver,pattern={{major}}.{{minor}},value=${{ env.VERSION }}
