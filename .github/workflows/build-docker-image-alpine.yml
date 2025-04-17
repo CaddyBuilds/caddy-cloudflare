@@ -71,6 +71,8 @@ jobs:
           images: |
             ghcr.io/${{ env.REPO_OWNER }}/caddy-cloudflare
             ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cloudflare
+          flavor: |
+            latest=false
           tags: |
             # Raw version tags
             type=raw,value=${{ env.VERSION }}-alpine
