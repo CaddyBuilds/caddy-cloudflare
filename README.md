@@ -232,9 +232,22 @@ To configure the [ACME DNS challenge](https://caddyserver.com/docs/automatic-htt
 ```
 This configuration sets up the provider to use the Cloudflare DNS module with the API token provided as an environment variable. It ensures that your Caddy server can automatically issue and renew SSL certificates using DNS-01 challenges via Cloudflare.
 
-This setup is the same as specifying the provider in the [tls directive's ACME issuer](https://caddyserver.com/docs/caddyfile/directives/tls#acme) configuration.
+This setup is the same as specsifying the provider in the [tls directive's ACME issuer](https://caddyserver.com/docs/caddyfile/directives/tls#acme) configuration.
 
 [Sample Caddyfile](#sample-caddyfile)
+
+#### Troubleshooting
+
+You may encounter `solving challenges: presenting for challenge: adding temporary record for zone xyz.: got error status: HTTP 403.` 
+In such cases, try setting custom DNS resolvers like below to bypass resolver issues:
+```
+tls {
+  dns cloudflare {env.CF_API_TOKEN}
+  resolvers 1.1.1.1
+}
+```
+
+[Official troubleshooting guide](https://github.com/caddy-dns/cloudflare?tab=readme-ov-file#troubleshooting)
 
 ## Tags
 
