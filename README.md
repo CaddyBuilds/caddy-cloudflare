@@ -236,6 +236,19 @@ This setup is the same as specifying the provider in the [tls directive's ACME i
 
 [Sample Caddyfile](#sample-caddyfile)
 
+#### Troubleshooting
+
+You may encounter `solving challenges: presenting for challenge: adding temporary record for zone xyz.: got error status: HTTP 403.` 
+In such cases, try setting custom DNS resolvers like below to bypass resolver issues:
+```
+tls {
+  dns cloudflare {env.CF_API_TOKEN}
+  resolvers 1.1.1.1
+}
+```
+
+[Official troubleshooting guide](https://github.com/caddy-dns/cloudflare?tab=readme-ov-file#troubleshooting)
+
 ## Tags
 
 The [caddy-cloudflare](https://github.com/caddybuilds/caddy-cloudflare/pkgs/container/caddy-cloudflare) image on GitHub Container Registry and Docker Hub provides the following tags:
