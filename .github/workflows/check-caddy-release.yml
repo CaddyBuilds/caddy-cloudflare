@@ -28,13 +28,16 @@ jobs:
       - name: Install Python dependencies
         run: pip install requests
 
+      - name: Set DOCKER_REPOSITORY_NAME with fallback
+        run: |
+          echo "DOCKER_REPOSITORY_NAME=${DOCKER_REPOSITORY_NAME:-caddybuilds/caddy-cloudflare}" >> $GITHUB_ENV
+        env:
+          DOCKER_REPOSITORY_NAME: ${{ vars.DOCKER_REPOSITORY_NAME || secrets.DOCKER_REPOSITORY_NAME }}
+
       - name: Check Caddy release status (GitHub & Docker Hub)
         id: check_script
         env:
-          # CHANGE THIS to your Docker Hub repository name
-          CUSTOM_REPOSITORY_NAME_IMAGE: "caddybuilds/caddy-cloudflare"
-          # CHANGE THIS if your tags start with 'v' (e.g., use 'v') 
-          CUSTOM_REPOSITORY_TAG_PREFIX: ""
+          DOCKER_REPOSITORY_NAME: ${{ env.DOCKER_REPOSITORY_NAME }}
         run: python scripts/check_caddy_status.py
 
       - name: Trigger Build Workflow if Needed

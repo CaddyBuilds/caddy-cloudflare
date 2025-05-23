@@ -316,6 +316,8 @@ If you prefer to build your own Docker image, follow these steps:
   - `GITHUB_TOKEN` (automatically available in GitHub Actions)
   - `DOCKERHUB_USERNAME` (optional, if you want to push to DockerHub)
   - `DOCKERHUB_TOKEN` (optional, if you want to push to DockerHub)
+  - `DOCKER_REPOSITORY_NAME` (optional, can be set as a repository secret or variable to customize the target DockerHub repository)
+
 
 ## Setup Instructions
 
