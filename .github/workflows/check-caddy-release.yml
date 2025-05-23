@@ -30,7 +30,9 @@ jobs:
 
       - name: Set DOCKER_REPOSITORY_NAME with fallback
         run: |
-          echo "DOCKER_REPOSITORY_NAME=${DOCKER_REPOSITORY_NAME:-${{ secrets.DOCKER_REPOSITORY_NAME || 'caddybuilds/caddy-cloudflare' }}}" >> $GITHUB_ENV
+          echo "DOCKER_REPOSITORY_NAME=${DOCKER_REPOSITORY_NAME:-caddybuilds/caddy-cloudflare}" >> $GITHUB_ENV
+        env:
+          DOCKER_REPOSITORY_NAME: ${{ vars.DOCKER_REPOSITORY_NAME || secrets.DOCKER_REPOSITORY_NAME }}
 
       - name: Check Caddy release status (GitHub & Docker Hub)
         id: check_script
