@@ -8,9 +8,9 @@ from datetime import datetime, timezone
 # --- Configuration ---
 GITHUB_REPO = "caddyserver/caddy"
 OFFICIAL_CADDY_IMAGE = "library/caddy"
-# !!! CHANGE THIS to your Docker Hub repository name !!!
-CUSTOM_IMAGE = "caddybuilds/caddy-cloudflare"
-# !!! CHANGE THIS if your tags start with 'v' (e.g., use 'v') !!!
+# --- Can be set as a repository secret or variable ---
+CUSTOM_IMAGE = os.environ.get('DOCKER_REPOSITORY_NAME', "caddybuilds/caddy-cloudflare")
+# DEPRECATED !!! CHANGE THIS if your tags start with 'v' (e.g., use 'v') !!!
 CUSTOM_TAG_PREFIX = ""
 # These are the platforms WE want to build and require the OFFICIAL image to have available.
 REQUIRED_PLATFORMS = {
