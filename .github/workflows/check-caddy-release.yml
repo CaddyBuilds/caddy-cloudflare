@@ -28,16 +28,16 @@ jobs:
       - name: Install Python dependencies
         run: pip install requests
 
-      - name: Set DOCKER_REPOSITORY_NAME with fallback
+      - name: Set DOCKERHUB_REPOSITORY_NAME with fallback
         run: |
-          echo "DOCKER_REPOSITORY_NAME=${DOCKER_REPOSITORY_NAME:-caddybuilds/caddy-cloudflare}" >> $GITHUB_ENV
+          echo "DOCKERHUB_REPOSITORY_NAME=${DOCKERHUB_REPOSITORY_NAME:-caddybuilds/caddy-cloudflare}" >> $GITHUB_ENV
         env:
-          DOCKER_REPOSITORY_NAME: ${{ vars.DOCKER_REPOSITORY_NAME || secrets.DOCKER_REPOSITORY_NAME }}
+          DOCKERHUB_REPOSITORY_NAME: ${{ vars.DOCKERHUB_REPOSITORY_NAME || secrets.DOCKERHUB_REPOSITORY_NAME }}
 
       - name: Check Caddy release status (GitHub & Docker Hub)
         id: check_script
         env:
-          DOCKER_REPOSITORY_NAME: ${{ env.DOCKER_REPOSITORY_NAME }}
+          DOCKERHUB_REPOSITORY_NAME: ${{ env.DOCKERHUB_REPOSITORY_NAME }}
         run: python scripts/check_caddy_status.py
 
       - name: Trigger Build Workflow if Needed
