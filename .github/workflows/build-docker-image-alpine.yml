@@ -70,10 +70,17 @@ jobs:
           VERSION="${VERSION#v}"
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
-      - name: Set Docker Hub image (if username exists)
+      - name: Set Docker Hub image (if credentials exist)
         run: |
-          if [ -n "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
-            echo "DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}" >> $GITHUB_ENV
+          # Check if Docker Hub credentials are provided
+          if [ -n "${{ secrets.DOCKERHUB_USERNAME }}" ] && [ -n "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+            if [ -n "${{ secrets.DOCKERHUB_REPOSITORY_NAME }}" ]; then
+              echo "DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_REPOSITORY_NAME }}" >> $GITHUB_ENV
+            else
+              echo "DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}" >> $GITHUB_ENV
+            fi
+          else
+            echo "Warning: DOCKERHUB_USERNAME or DOCKERHUB_TOKEN not set. Docker Hub image will not be pushed."
           fi
 
       - name: Docker Metadata
