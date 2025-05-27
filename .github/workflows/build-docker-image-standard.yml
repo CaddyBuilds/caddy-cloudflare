@@ -69,13 +69,19 @@ jobs:
           VERSION="${VERSION#v}"
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
+      - name: Set Docker Hub image (if username exists)
+        run: |
+          if [ -n "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
+            echo "DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/caddy-cloudflare" >> $GITHUB_ENV
+          fi
+
       - name: Docker Metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: |
             ghcr.io/${{ env.REPO_OWNER }}/caddy-cloudflare
-            ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cloudflare
+            ${{ env.DOCKERHUB_IMAGE }}
           tags: |
             # Raw version tags
             type=raw,value=${{ env.VERSION }}
