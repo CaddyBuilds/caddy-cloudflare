@@ -347,7 +347,7 @@ If you prefer to build your own Docker image, follow these steps:
    - Once the workflow completes successfully, the Docker image will be available in the GitHub Container Registry under your repository.
    - You can pull the image using:
      ```sh
-     docker pull ghcr.io/YOUR_GITHUB_USERNAME/caddy-cloudflare:latest
+     docker pull ghcr.io/YOUR_GITHUB_USERNAME/YOUR_GITHUB_REPOSITORY_NAME:latest
      ```
 
 ## Usage
@@ -357,7 +357,7 @@ You can use the built Docker image in your projects. Here is an example of how t
 ```yaml
 services:
   caddy:
-    image: ghcr.io/YOUR_GITHUB_USERNAME/caddy-cloudflare:latest
+    image: ghcr.io/YOUR_GITHUB_USERNAME/YOUR_GITHUB_REPOSITORY_NAME:latest
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
