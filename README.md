@@ -323,43 +323,31 @@ If you prefer to build your own Docker image, follow these steps:
 
 1. **[Fork this repository](https://github.com/caddybuilds/caddy-cloudflare/fork)** to your GitHub account.
 
-2. **Clone the forked repository** to your local machine:
-   ```sh
-   git clone https://github.com/YOUR_GITHUB_USERNAME/caddy-cloudflare.git
-   cd caddy-cloudflare
-   ```
-
-3. **Set up GitHub Secrets**:
+2. **Set up GitHub Secrets**:
    - Go to your repository on GitHub.
    - Navigate to `Settings` > `Secrets and variables` > `Actions`.
    - Add the following secrets:
      - `GITHUB_TOKEN`: This is automatically available in GitHub Actions.
      - `DOCKERHUB_USERNAME`: Your DockerHub username (optional).
      - `DOCKERHUB_TOKEN`: Your DockerHub access token (optional).
+     - `DOCKER_REPOSITORY_NAME` (optional, can be set as a repository secret or variable to customize the target DockerHub repository)
 
-4. **Customize the workflow** (if needed):
-   - The workflow file `.github/workflows/check-caddy-release.yml` is configured to check for new Caddy releases and build the Docker image. You can customize the schedule or any other part of the workflow as needed.
-
-5. **Commit and push any changes** (if you made customizations):
-   ```sh
-   git add .
-   git commit -m "Customize workflow"
-   git push origin main
-   ```
-
-6. **Manually trigger the workflow** (optional):
+3. **Manually trigger the workflow** (optional):
    - Go to the `Actions` tab in your GitHub repository.
    - Select the `Build and Push Docker Image` workflow.
    - Click the `Run workflow` button to trigger the build process manually.
 
-7. **Monitor the workflow**:
+4. **Enable the workflow**:
+    - Make sure GitHub Actions is enabled for your repository. Go to the `Actions` tab and, if prompted, click "I understand my workflows, go ahead and enable them" to activate Actions for your fork.
+
+5. **Monitor the workflow**:
    - You can monitor the progress and logs of the workflow in the `Actions` tab of your GitHub repository.
 
-8. **Docker image**:
+6. **Docker image**:
    - Once the workflow completes successfully, the Docker image will be available in the GitHub Container Registry under your repository.
    - You can pull the image using:
      ```sh
-     docker pull ghcr.io/YOUR_GITHUB_USERNAME/caddy-cloudflare:latest
+     docker pull ghcr.io/YOUR_GITHUB_USERNAME/YOUR_GITHUB_REPOSITORY_NAME:latest
      ```
 
 ## Usage
@@ -369,7 +357,7 @@ You can use the built Docker image in your projects. Here is an example of how t
 ```yaml
 services:
   caddy:
-    image: ghcr.io/YOUR_GITHUB_USERNAME/caddy-cloudflare:latest
+    image: ghcr.io/YOUR_GITHUB_USERNAME/YOUR_GITHUB_REPOSITORY_NAME:latest
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
