@@ -26,6 +26,7 @@ Deploy a hassle-free Caddy server with built-in support for Cloudflare DNS-01 AC
 - **Automated Builds**: Automatically checks for new Caddy releases and builds Docker images.
 - **Continuous Integration**: Utilizes GitHub Actions for seamless CI/CD.
 - **Cloudflare DNS Integration**: Integrates Cloudflare DNS for automatic SSL certificate management.
+- **Cloudflare Proxy IP Trust**: Includes the [caddy-cloudflare-ip](https://github.com/WeidiDeng/caddy-cloudflare-ip) module to automatically trust Cloudflare’s proxy IP ranges, ensuring correct client IP addresses are passed through and logged.
 - **Multi-Platform Support**: Builds images for multiple architectures, including `amd64`, `arm64`, `arm/v7` (Raspberry Pi), `ppc64le`, and `s390x` , ensuring compatibility across a wide range of devices and systems.
 - **Alpine-based Image**: Provides a lightweight Alpine-based image for smaller size and faster deployment.
 - **Manual Trigger**: Allows manual triggering of the build process.
@@ -155,6 +156,31 @@ another-example.com {
 }
 ```
 
+### Sample Caddyfile with Cloudflare IP Trust
+
+```
+{
+  acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+
+  servers {
+		trusted_proxies cloudflare
+		client_ip_headers Cf-Connecting-Ip
+	}
+
+}
+
+example.com {
+    root * /usr/share/caddy
+    file_server
+    encode gzip
+}
+```
+
+With this setup:  
+- Requests proxied through Cloudflare will correctly populate `X-Forwarded-For` headers.  
+- Access logs will show the **real client IP** instead of Cloudflare’s edge server IPs.  
+
+
 ## Configuration
 ### Creating a Cloudflare API Token
 
@@ -265,6 +291,8 @@ The [caddy-cloudflare](https://github.com/caddybuilds/caddy-cloudflare/pkgs/cont
          (eg: ```docker pull ghcr.io/caddybuilds/caddy-cloudflare:2.8.0``` )
     - **`2.7`**: Minor version tag for the latest patch release within the 2.7 series, allowing for minor updates without breaking changes.
     - **`2`**: Major version tag for the latest release within the 2.x series, providing updates within the major version while maintaining compatibility.
+
+  > **Note:** Starting from version `v2.11.0`, the image also includes the `caddy-cloudflare-ip` module by default.  
 
 - `alpine`: Always points to the latest stable release of the Alpine-based image.
   - `<version>-alpine`: Specific version tags for the Alpine-based image (e.g., `2.7.6-alpine`).
