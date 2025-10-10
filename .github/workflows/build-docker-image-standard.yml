@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       build_version:
-        description: 'Caddy version to build (without v prefix, e.g., 2.8.0)'
+        description: "Caddy version to build (without v prefix, e.g., 2.8.0)"
         required: false
 
 permissions:
@@ -99,8 +99,8 @@ jobs:
             type=semver,pattern={{major}}.{{minor}},value=${{ env.VERSION }}
             type=semver,pattern={{major}},value=${{ env.VERSION }}
           labels: |
-            org.opencontainers.image.title=Caddy Cloudflare
-            org.opencontainers.image.description=Caddy with Cloudflare DNS module
+            org.opencontainers.image.title=Caddy Cloudflare Tailscale
+            org.opencontainers.image.description=Caddy with Cloudflare DNS and Tailscale module
             org.opencontainers.image.url=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.version=${{ env.VERSION }}
