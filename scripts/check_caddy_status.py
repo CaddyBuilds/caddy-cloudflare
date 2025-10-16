@@ -75,7 +75,7 @@ def get_latest_caddy_release():
     else:
         log_info("::warning::No GITHUB_TOKEN found, using unauthenticated request (lower rate limit)")
     try:
-        response = requests.get(url, timeout=30)
+        response = requests.get(url, headers=headers, timeout=30)
         response.raise_for_status()
         release = response.json()
         tag_name = release.get('tag_name')
