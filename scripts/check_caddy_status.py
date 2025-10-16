@@ -10,6 +10,7 @@ GITHUB_REPO = "caddyserver/caddy"
 OFFICIAL_CADDY_IMAGE = "library/caddy"
 # --- Can be set as a repository secret or variable ---
 CUSTOM_IMAGE = os.environ.get('DOCKERHUB_REPOSITORY_NAME', "caddybuilds/caddy-cloudflare")
+GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', "")
 # DEPRECATED !!! CHANGE THIS if your tags start with 'v' (e.g., use 'v') !!!
 CUSTOM_TAG_PREFIX = ""
 # These are the platforms WE want to build and require the OFFICIAL image to have available.
@@ -63,11 +64,16 @@ def set_action_output(output_name, value):
         # Exiting might be safer if outputs are critical
         sys.exit(1)
 
-
 def get_latest_caddy_release():
     """Fetches the latest release tag from the Caddy GitHub repository."""
     url = f'https://api.github.com/repos/{GITHUB_REPO}/releases/latest'
     log_info(f"Fetching latest release from {url}")
+    headers = {}
+    if GITHUB_TOKEN:
+        headers['Authorization'] = f'token {GITHUB_TOKEN}'
+        log_info("Using authenticated GitHub API request")
+    else:
+        log_info("::warning::No GITHUB_TOKEN found, using unauthenticated request (lower rate limit)")
     try:
         response = requests.get(url, timeout=30)
         response.raise_for_status()
@@ -92,8 +98,6 @@ def get_latest_caddy_release():
         log_error(f"Error decoding GitHub API JSON response: {e}")
         sys.exit(1)
 
-
-
 def check_docker_hub_tag(image_name, tag):
     """Checks if a specific tag exists for a Docker Hub image. Returns tag data or None."""
     url = f"https://hub.docker.com/v2/repositories/{image_name}/tags/{tag}"
@@ -115,8 +119,6 @@ def check_docker_hub_tag(image_name, tag):
     except json.JSONDecodeError as e:
         log_error(f"Error decoding Docker Hub API response for tag '{tag}' of '{image_name}': {e}. Response: {response.text[:200]}")
         return None
-
-
 
 def get_platforms_from_tag_data(tag_data):
     """Extracts required linux platform strings from Docker Hub tag API response."""
@@ -145,7 +147,6 @@ def get_platforms_from_tag_data(tag_data):
              platforms.add(platform_str)
 
     return platforms
-
 
 def main():
     start_time = datetime.now(timezone.utc)
