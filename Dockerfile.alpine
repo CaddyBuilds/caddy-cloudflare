@@ -5,7 +5,8 @@ FROM caddy:${CADDY_VERSION}-builder-alpine AS builder
 # Build Caddy with the Cloudflare DNS module
 RUN xcaddy build \
     --with github.com/caddy-dns/cloudflare \
-    --with github.com/WeidiDeng/caddy-cloudflare-ip
+    --with github.com/WeidiDeng/caddy-cloudflare-ip \
+    --with github.com/fvbommel/caddy-combine-ip-ranges
 
 # Final stage
 FROM caddy:${CADDY_VERSION}-alpine
