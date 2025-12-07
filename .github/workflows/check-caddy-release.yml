@@ -38,6 +38,7 @@ jobs:
         id: check_script
         env:
           DOCKERHUB_REPOSITORY_NAME: ${{ env.DOCKERHUB_REPOSITORY_NAME }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python scripts/check_caddy_status.py
 
       - name: Trigger Build Workflow if Needed
