@@ -17,6 +17,9 @@ def check_ghcr_tag(image_name, tag):
     token_url = f"https://ghcr.io/token?scope=repository:{image_name}:pull"
     try:
         token_resp = request_with_retry(token_url, timeout=30)
+        if token_resp.status_code in (403, 404):
+            # Package doesn't exist in GHCR (never published)
+            return TagCheckResult.NOT_FOUND, None
         if token_resp.status_code != 200:
             msg = f"Failed to get GHCR token: status {token_resp.status_code}"
             log.warn(msg)
