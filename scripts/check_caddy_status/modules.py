@@ -76,7 +76,7 @@ def check_module_updates():
             log.info(f"    Unchanged: {current_sha[:12]}")
 
     if is_first_run:
-        log.info("  First run — populating module SHAs (no build triggered)")
-        return False, [], updated_state
+        log.info("  First run — recorded SHAs, triggering build to ensure image is fresh")
+        return True, ["first_run"], updated_state
 
     return len(changed_modules) > 0, changed_modules, updated_state
