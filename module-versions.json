@@ -1,20 +1,4 @@
 {
-  "last_checked": "2026-03-24T17:09:50.109538+00:00",
-  "modules": {
-    "github.com/caddy-dns/cloudflare": {
-      "repo": "caddy-dns/cloudflare",
-      "last_commit_sha": "a8737d095ad5a48ca031cea6ab704057dbc2d250",
-      "last_checked": "2026-03-24T17:09:49.535697+00:00"
-    },
-    "github.com/WeidiDeng/caddy-cloudflare-ip": {
-      "repo": "WeidiDeng/caddy-cloudflare-ip",
-      "last_commit_sha": "f53b62aa13cb7ad79c8b47aacc3f2f03989b67e5",
-      "last_checked": "2026-03-24T17:09:49.857976+00:00"
-    },
-    "github.com/fvbommel/caddy-combine-ip-ranges": {
-      "repo": "fvbommel/caddy-combine-ip-ranges",
-      "last_commit_sha": "5624d08f5f9e788816bdd877b7c81280c69b434e",
-      "last_checked": "2026-03-24T17:09:50.109508+00:00"
-    }
-  }
+  "last_checked": "",
+  "modules": {}
 }
