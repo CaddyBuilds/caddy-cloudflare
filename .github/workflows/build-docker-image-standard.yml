@@ -9,6 +9,10 @@ on:
         description: 'Caddy version to build (without v prefix, e.g., 2.8.0)'
         required: false
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   build:
     uses: ./.github/workflows/build-docker-image.yml
