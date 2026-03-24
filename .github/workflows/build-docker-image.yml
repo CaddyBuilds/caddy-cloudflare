@@ -1,0 +1,189 @@
+name: Build and Push Docker Image (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      caddy_version:
+        description: 'Caddy version to build (without v prefix, e.g., 2.8.0)'
+        required: true
+        type: string
+      dockerfile:
+        description: 'Dockerfile to use'
+        required: true
+        type: string
+      tag_suffix:
+        description: 'Suffix for tags (e.g., "-alpine"). Leave empty for standard.'
+        required: false
+        type: string
+        default: ''
+      image_title:
+        description: 'Image title for OCI labels'
+        required: true
+        type: string
+      image_description:
+        description: 'Image description for OCI labels'
+        required: true
+        type: string
+      static_tag:
+        description: 'Additional static tag (e.g., "alpine"). Leave empty for none.'
+        required: false
+        type: string
+        default: ''
+      flavor_latest:
+        description: 'Whether to tag as latest (auto/true/false)'
+        required: false
+        type: string
+        default: 'auto'
+      create_release:
+        description: 'Whether to create a GitHub Release'
+        required: false
+        type: boolean
+        default: false
+      build_reason:
+        description: 'Why this build was triggered (new_caddy_version/module_update)'
+        required: false
+        type: string
+        default: ''
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: false
+      DOCKERHUB_TOKEN:
+        required: false
+      DOCKERHUB_REPOSITORY_NAME:
+        required: false
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        env:
+          user: ${{ secrets.DOCKERHUB_USERNAME }}
+          token: ${{ secrets.DOCKERHUB_TOKEN }}
+        if: ${{ env.user != '' && env.token != '' }}
+
+      - name: Set Repository Owner and Name in Lowercase
+        run: |
+          REPO_OWNER=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
+          echo "REPO_OWNER=${REPO_OWNER}" >> $GITHUB_ENV
+          REPO_NAME=$(echo "${GITHUB_REPOSITORY#*/}" | tr '[:upper:]' '[:lower:]')
+          echo "REPO_NAME=${REPO_NAME}" >> $GITHUB_ENV
+          # Strip v prefix if present
+          VERSION="${{ inputs.caddy_version }}"
+          VERSION="${VERSION#v}"
+          if [ -z "$VERSION" ]; then
+            echo "::error::No version specified."
+            exit 1
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
+      - name: Set Docker Hub image (if credentials exist)
+        run: |
+          if [ -n "${{ secrets.DOCKERHUB_USERNAME }}" ] && [ -n "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+            if [ -n "${{ secrets.DOCKERHUB_REPOSITORY_NAME }}" ]; then
+              echo "DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_REPOSITORY_NAME }}" >> $GITHUB_ENV
+            else
+              echo "DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}" >> $GITHUB_ENV
+            fi
+          else
+            echo "Warning: DOCKERHUB_USERNAME or DOCKERHUB_TOKEN not set. Docker Hub image will not be pushed."
+          fi
+
+      - name: Docker Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}
+            ${{ env.DOCKERHUB_IMAGE }}
+          flavor: |
+            latest=${{ inputs.flavor_latest }}
+          tags: |
+            type=raw,value=${{ env.VERSION }}${{ inputs.tag_suffix }}
+            ${{ inputs.static_tag != '' && format('type=raw,value={0}', inputs.static_tag) || '' }}
+            type=semver,pattern={{version}}${{ inputs.tag_suffix }},value=${{ env.VERSION }}
+            type=semver,pattern={{major}}.{{minor}}${{ inputs.tag_suffix }},value=${{ env.VERSION }}
+            type=semver,pattern={{major}}${{ inputs.tag_suffix }},value=${{ env.VERSION }}
+          labels: |
+            org.opencontainers.image.title=${{ inputs.image_title }}
+            org.opencontainers.image.description=${{ inputs.image_description }}
+            org.opencontainers.image.url=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.version=${{ env.VERSION }}${{ inputs.tag_suffix }}
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ inputs.dockerfile }}
+          push: true
+          build-args: |
+            CADDY_VERSION=${{ env.VERSION }}
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Verify built image
+        run: |
+          IMAGE="ghcr.io/${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}:${{ env.VERSION }}${{ inputs.tag_suffix }}"
+          echo "Pulling ${IMAGE}..."
+          docker pull "${IMAGE}"
+          echo "Checking caddy version..."
+          docker run --rm "${IMAGE}" caddy version
+          echo "Checking cloudflare module is loaded..."
+          docker run --rm "${IMAGE}" caddy list-modules | grep -q "dns.providers.cloudflare"
+          echo "Build verification passed."
+
+      - name: Create GitHub Release
+        if: ${{ inputs.create_release }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: "Caddy v${{ env.VERSION }}"
+          body: |
+            New Caddy release detected (build reason: ${{ inputs.build_reason || 'manual' }}).
+            See the full release notes [here](https://github.com/caddyserver/caddy/releases/tag/v${{ env.VERSION }}).
+          draft: false
+          prerelease: false
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const suffix = '${{ inputs.tag_suffix }}' || 'standard';
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Build failed: Caddy v${{ env.VERSION }} (${suffix})`,
+              body: `The automated build failed.\n\n- **Version:** ${{ env.VERSION }}\n- **Variant:** ${suffix}\n- **Reason:** ${{ inputs.build_reason || 'manual' }}\n- **Run:** ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              labels: ['build-failure']
+            });

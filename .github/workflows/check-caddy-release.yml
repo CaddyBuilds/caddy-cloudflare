@@ -28,35 +28,40 @@ jobs:
       - name: Install Python dependencies
         run: pip install requests
 
-      - name: Set DOCKERHUB_REPOSITORY_NAME with fallback
-        run: |
-          echo "DOCKERHUB_REPOSITORY_NAME=${DOCKERHUB_REPOSITORY_NAME:-caddybuilds/caddy-cloudflare}" >> $GITHUB_ENV
-        env:
-          DOCKERHUB_REPOSITORY_NAME: ${{ vars.DOCKERHUB_REPOSITORY_NAME || secrets.DOCKERHUB_REPOSITORY_NAME }}
-
-      - name: Check Caddy release status (GitHub & Docker Hub)
+      - name: Check Caddy release status and module updates
         id: check_script
         env:
-          DOCKERHUB_REPOSITORY_NAME: ${{ env.DOCKERHUB_REPOSITORY_NAME }}
+          DOCKERHUB_REPOSITORY_NAME: ${{ vars.DOCKERHUB_REPOSITORY_NAME || secrets.DOCKERHUB_REPOSITORY_NAME }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python scripts/check_caddy_status.py
+        run: python -m check_caddy_status
+        working-directory: scripts
+
+      - name: Commit updated module versions
+        if: steps.check_script.outputs.MODULE_UPDATE == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add module-versions.json
+          git diff --staged --quiet || git commit -m "chore: update module version tracking [skip ci]"
+          git push
 
       - name: Trigger Build Workflow if Needed
-        # Run this step ONLY if the script output NEEDS_BUILD is 'true'
         if: steps.check_script.outputs.NEEDS_BUILD == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const version = '${{ steps.check_script.outputs.LATEST_VERSION }}';
-            console.log(`Build required for Caddy version: ${version}. Dispatching event...`);
+            const reason = '${{ steps.check_script.outputs.BUILD_REASON }}';
+            console.log(`Build required for Caddy ${version} (reason: ${reason}). Dispatching...`);
             try {
               await github.rest.repos.createDispatchEvent({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 event_type: 'caddy-release',
                 client_payload: {
-                  caddy_version: version // Pass the tag (e.g., "v2.9.1")
+                  caddy_version: version,
+                  build_reason: reason
                 }
               });
               console.log(`Successfully dispatched event for ${version}.`);
