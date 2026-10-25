@@ -46,18 +46,21 @@ def get_latest_caddy_release():
         sys.exit(1)
 
 
-def get_latest_commit_sha(repo):
-    """Fetches the latest commit SHA for a GitHub repo's default branch.
-    Returns None on failure (non-fatal — caller decides how to handle).
+def get_latest_commit(repo):
+    """Fetches the latest commit on a GitHub repo's default branch.
+
+    Returns:
+        tuple: (sha, subject) or (None, None) on failure (non-fatal — caller decides).
     """
     url = f"https://api.github.com/repos/{repo}/commits?per_page=1"
     try:
         response = request_with_retry(url, headers=_github_headers(), timeout=30)
         response.raise_for_status()
         commits = response.json()
-        if commits and isinstance(commits, list) and len(commits) > 0:
-            return commits[0].get("sha")
-        return None
+        if commits and isinstance(commits, list):
+            message = commits[0].get("commit", {}).get("message", "")
+            return commits[0].get("sha"), message.splitlines()[0] if message else ""
+        return None, None
     except (requests.exceptions.RequestException, json.JSONDecodeError) as e:
         log.warn(f"Failed to fetch latest commit for {repo}: {e}")
-        return None
+        return None, None

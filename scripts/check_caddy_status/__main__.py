@@ -62,24 +62,25 @@ def main():
 
     # Step 3: Check module updates
     log.info(f"\nStep 3: Checking module updates...")
-    modules_changed, changed_modules, updated_module_state = check_module_updates()
+    modules_changed, module_details, updated_module_state = check_module_updates()
     save_module_versions(updated_module_state, dry_run)
 
     if modules_changed:
-        log.set_summary("Module Changes", ", ".join(m.split("/")[-1] for m in changed_modules))
+        log.set_summary("Module Changes", "; ".join(module_details))
     else:
         log.set_summary("Module Changes", "None")
 
     # Step 4: Check if the official image was republished (base OS / Go fixes).
     # Only worth the requests when nothing above already forces a build.
-    base_image_updated = False
+    base_details = []
     if custom_image_complete and not modules_changed:
         log.info(f"\nStep 4: Checking official base image updates...")
-        base_image_updated = check_base_image_updates(docker_tag)
+        base_details = check_base_image_updates(docker_tag)
 
     # Final decision
     needs_build = False
     build_reason = "none"
+    build_details = ""
 
     if not custom_image_complete:
         needs_build = True
@@ -87,12 +88,14 @@ def main():
     elif modules_changed:
         needs_build = True
         build_reason = "module_update"
-    elif base_image_updated:
+        build_details = "; ".join(module_details)
+    elif base_details:
         needs_build = True
         build_reason = "base_image_update"
+        build_details = "; ".join(base_details)
 
     log.set_summary("Build Decision", f"{'Yes' if needs_build else 'No'} (reason: {build_reason})")
-    _set_outputs(needs_build=needs_build, version=latest_gh_tag, reason=build_reason, module_update=modules_changed, dry_run=dry_run)
+    _set_outputs(needs_build=needs_build, version=latest_gh_tag, reason=build_reason, module_update=modules_changed, dry_run=dry_run, details=build_details)
     log.print_summary()
 
     end_time = datetime.now(timezone.utc)
@@ -182,11 +185,18 @@ def _check_custom_image(docker_tag):
     return custom_complete
 
 
-def _set_outputs(needs_build, version, reason, module_update, dry_run):
+def _set_outputs(needs_build, version, reason, module_update, dry_run, details=""):
     set_action_output("NEEDS_BUILD", "true" if needs_build else "false", dry_run)
     set_action_output("LATEST_VERSION", version, dry_run)
     set_action_output("BUILD_REASON", reason, dry_run)
+    set_action_output("BUILD_DETAILS", _one_line(details), dry_run)
     set_action_output("MODULE_UPDATE", "true" if module_update else "false", dry_run)
+
+
+def _one_line(text, limit=500):
+    """Collapses text to one bounded line — it ends up in a dispatch payload, image label and release notes."""
+    text = " ".join(text.split())
+    return text if len(text) <= limit else text[: limit - 3] + "..."
 
 
 if __name__ == "__main__":

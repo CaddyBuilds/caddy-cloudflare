@@ -13,7 +13,7 @@ from .timeutil import parse_timestamp
 
 
 def check_base_image_updates(docker_tag):
-    """Returns True if any variant's official image is newer than our build of it."""
+    """Returns descriptions of variants whose official image is newer than our build (empty if none)."""
     stale = []
     unknown = []
 
@@ -29,7 +29,7 @@ def check_base_image_updates(docker_tag):
 
         log.info(f"  {tag}: official pushed {official.isoformat()}, ours built {ours.isoformat()}")
         if official > ours:
-            stale.append(tag)
+            stale.append(f"{OFFICIAL_CADDY_IMAGE.removeprefix('library/')}:{tag} republished {official:%Y-%m-%d}")
 
     if stale:
         log.set_summary("Base Image", f"Updated upstream: {', '.join(stale)}")
@@ -38,7 +38,7 @@ def check_base_image_updates(docker_tag):
     else:
         log.set_summary("Base Image", "Up to date")
 
-    return bool(stale)
+    return stale
 
 
 def _custom_build_time(tag):
