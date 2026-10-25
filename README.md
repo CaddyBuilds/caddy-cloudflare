@@ -79,7 +79,7 @@ These modules are compiled into Caddy at build time using [xcaddy](https://githu
 |--------|---------|------------|
 | `caddy-dns/cloudflare` | DNS-01 ACME challenge provider for Cloudflare | [caddy-dns/cloudflare](https://github.com/caddy-dns/cloudflare) |
 | `caddy-cloudflare-ip` | Automatically trust Cloudflare proxy IP ranges for correct client IPs | [WeidiDeng/caddy-cloudflare-ip](https://github.com/WeidiDeng/caddy-cloudflare-ip) |
-| `caddy-combine-ip-ranges` | Efficiently merge and combine overlapping IP ranges | [fvbommel/caddy-combine-ip-ranges](https://github.com/fvbommel/caddy-combine-ip-ranges) |
+| `caddy-combine-ip-ranges` | Combine IP ranges from multiple sources (e.g. Cloudflare plus your own) for `trusted_proxies` | [fvbommel/caddy-combine-ip-ranges](https://github.com/fvbommel/caddy-combine-ip-ranges) |
 | `caddy-ratelimit` | Rate limit requests per real client IP, even behind Cloudflare's proxy | [mholt/caddy-ratelimit](https://github.com/mholt/caddy-ratelimit) |
 
 ## Usage
@@ -232,7 +232,7 @@ With this setup:
 - `{client_ip}` resolves to the visitor's IP via `trusted_proxies cloudflare`. Without it, every visitor behind the same Cloudflare edge would share one limit.
 - `order rate_limit before basic_auth` is required because `rate_limit` is not a standard Caddy directive.
 
-See the [module documentation](https://github.com/mholt/caddy-ratelimit) for multiple zones, request matchers, and distributed limits.
+Older images do not include this module and will fail with `rate_limit is not a registered directive`; check yours with the command in [Verifying Modules](#verifying-modules). See the [module documentation](https://github.com/mholt/caddy-ratelimit) for multiple zones, request matchers, and distributed limits.
 
 ## Configuration
 
