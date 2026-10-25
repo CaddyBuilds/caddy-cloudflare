@@ -40,7 +40,7 @@ on:
         type: boolean
         default: false
       build_reason:
-        description: 'Why this build was triggered (new_caddy_version/module_update)'
+        description: 'Why this build was triggered (new_caddy_version/module_update/base_image_update)'
         required: false
         type: string
         default: ''
@@ -162,8 +162,10 @@ jobs:
           docker run --rm "${IMAGE}" caddy list-modules | grep -q "dns.providers.cloudflare"
           echo "Build verification passed."
 
+      # Module and base image rebuilds republish an existing version — the release step
+      # would overwrite that version's notes, so only run it for new versions or manual builds.
       - name: Create GitHub Release
-        if: ${{ inputs.create_release }}
+        if: ${{ inputs.create_release && (inputs.build_reason == 'new_caddy_version' || inputs.build_reason == 'manual') }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.VERSION }}
