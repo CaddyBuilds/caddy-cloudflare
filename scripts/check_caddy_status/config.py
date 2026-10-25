@@ -33,6 +33,7 @@ MODULES = [
     {"module": "github.com/caddy-dns/cloudflare", "repo": "caddy-dns/cloudflare"},
     {"module": "github.com/WeidiDeng/caddy-cloudflare-ip", "repo": "WeidiDeng/caddy-cloudflare-ip"},
     {"module": "github.com/fvbommel/caddy-combine-ip-ranges", "repo": "fvbommel/caddy-combine-ip-ranges"},
+    {"module": "github.com/mholt/caddy-ratelimit", "repo": "mholt/caddy-ratelimit"},
 ]
 
 # Path to module version tracking file (repo root)

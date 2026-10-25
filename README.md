@@ -80,6 +80,7 @@ These modules are compiled into Caddy at build time using [xcaddy](https://githu
 | `caddy-dns/cloudflare` | DNS-01 ACME challenge provider for Cloudflare | [caddy-dns/cloudflare](https://github.com/caddy-dns/cloudflare) |
 | `caddy-cloudflare-ip` | Automatically trust Cloudflare proxy IP ranges for correct client IPs | [WeidiDeng/caddy-cloudflare-ip](https://github.com/WeidiDeng/caddy-cloudflare-ip) |
 | `caddy-combine-ip-ranges` | Efficiently merge and combine overlapping IP ranges | [fvbommel/caddy-combine-ip-ranges](https://github.com/fvbommel/caddy-combine-ip-ranges) |
+| `caddy-ratelimit` | Rate limit requests per real client IP, even behind Cloudflare's proxy | [mholt/caddy-ratelimit](https://github.com/mholt/caddy-ratelimit) |
 
 ## Usage
 
@@ -198,6 +199,41 @@ With this setup:
 
 Requires an image from `v2.11.0` or later (see [Tags](#tags)). Add the matcher to each site block you want to protect. This checks the source IP only; for stronger guarantees, also restrict ports 80/443 to Cloudflare at your firewall, or use [Authenticated Origin Pulls](https://developers.cloudflare.com/ssl/origin-configuration/authenticated-origin-pull/).
 
+#### Rate Limiting
+
+Limit how many requests each visitor can make, keyed on their real IP rather than Cloudflare's:
+
+```
+{
+  acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+  order rate_limit before basic_auth
+
+  servers {
+    trusted_proxies cloudflare
+    client_ip_headers Cf-Connecting-Ip
+  }
+}
+
+example.com {
+    rate_limit {
+        zone per_client {
+            key    {client_ip}
+            events 100
+            window 1m
+        }
+    }
+
+    reverse_proxy localhost:8080
+}
+```
+
+With this setup:
+- Each client gets 100 requests per minute; further requests receive `429 Too Many Requests` with a `Retry-After` header.
+- `{client_ip}` resolves to the visitor's IP via `trusted_proxies cloudflare`. Without it, every visitor behind the same Cloudflare edge would share one limit.
+- `order rate_limit before basic_auth` is required because `rate_limit` is not a standard Caddy directive.
+
+See the [module documentation](https://github.com/mholt/caddy-ratelimit) for multiple zones, request matchers, and distributed limits.
+
 ## Configuration
 
 ### Creating a Cloudflare API Token
@@ -294,10 +330,10 @@ tls {
 
 ### Verifying Modules
 
-To confirm the Cloudflare modules are loaded:
+To confirm the bundled modules are loaded:
 
 ```sh
-docker run --rm ghcr.io/caddybuilds/caddy-cloudflare:latest caddy list-modules | grep -E "cloudflare|combine"
+docker run --rm ghcr.io/caddybuilds/caddy-cloudflare:latest caddy list-modules | grep -E "cloudflare|combine|rate_limit"
 ```
 
 ### Official Resources
