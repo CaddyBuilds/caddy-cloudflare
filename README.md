@@ -183,7 +183,7 @@ Reject requests that reach your origin directly instead of through Cloudflare's 
 }
 
 example.com {
-    @notCloudflare vars trusted_proxy false
+    @notCloudflare vars {vars.client_ip} {remote_host}
     abort @notCloudflare
 
     reverse_proxy localhost:8080
@@ -191,7 +191,7 @@ example.com {
 ```
 
 With this setup:
-- Caddy marks each request with `trusted_proxy` based on whether the connecting IP is in Cloudflare's published ranges, which `caddy-cloudflare-ip` keeps up to date. No hardcoded IP list is needed.
+- Caddy only reads `Cf-Connecting-Ip` when the connecting IP is in Cloudflare's published ranges, which `caddy-cloudflare-ip` keeps up to date. For any other connection the client IP equals the connecting IP, so the matcher catches it. No hardcoded IP list is needed ([approach suggested on the Caddy forum](https://caddy.community/t/why-remote-ip-can-not-parse-cloudflare-or-cloudfront-ip-which-from-a-plugin/33351)).
 - Direct requests have their connection closed. Use `respond @notCloudflare 403` instead of `abort` if you prefer an explicit error.
 - Certificate issuance is unaffected, since the DNS-01 challenge does not use inbound HTTP.
 - Not for [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) setups: tunneled traffic arrives from your local `cloudflared`, not Cloudflare's IPs, so every request would be rejected.
