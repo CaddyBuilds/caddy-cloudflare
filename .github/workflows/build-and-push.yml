@@ -1,4 +1,4 @@
-name: Build and Push Standard Docker Image
+name: Build and Push Docker Image
 
 on:
   repository_dispatch:
@@ -19,6 +19,9 @@ jobs:
     with:
       caddy_version: ${{ github.event.inputs.build_version || github.event.client_payload.caddy_version }}
       dockerfile: Dockerfile
+      # The official Linux image is Alpine-based; -alpine tags are kept for existing users
+      alias_suffix: "-alpine"
+      static_tag: "alpine"
       image_title: Caddy Cloudflare
       image_description: Caddy with Cloudflare DNS module
       flavor_latest: "auto"
