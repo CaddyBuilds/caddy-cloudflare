@@ -34,12 +34,12 @@ def check_docker_hub_tag(image_name, tag):
         return TagCheckResult.ERROR, msg
 
 
-def get_platforms_from_tag_data(tag_data):
-    """Extracts required linux platform strings from Docker Hub tag API response."""
-    platforms = set()
+def get_images_by_platform(tag_data):
+    """Maps required linux platform strings to their image entries from Docker Hub tag data."""
+    images = {}
     if not tag_data or "images" not in tag_data or not isinstance(tag_data["images"], list):
         log.info("  Could not find valid 'images' list in Docker Hub tag data.")
-        return platforms
+        return images
 
     for img in tag_data["images"]:
         if not isinstance(img, dict):
@@ -59,6 +59,11 @@ def get_platforms_from_tag_data(tag_data):
             continue
 
         if platform_str in REQUIRED_PLATFORMS:
-            platforms.add(platform_str)
+            images[platform_str] = img
 
-    return platforms
+    return images
+
+
+def get_platforms_from_tag_data(tag_data):
+    """Extracts required linux platform strings from Docker Hub tag API response."""
+    return set(get_images_by_platform(tag_data))

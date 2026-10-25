@@ -9,6 +9,7 @@ import argparse
 import sys
 from datetime import datetime, timezone
 
+from .base_image import check_base_image_updates
 from .config import CUSTOM_IMAGE, GHCR_IMAGE, OFFICIAL_CADDY_IMAGE, REQUIRED_PLATFORMS
 from .docker_hub import check_docker_hub_tag, get_platforms_from_tag_data
 from .ghcr import check_ghcr_tag
@@ -39,12 +40,12 @@ def main():
     log.info(f"GHCR image: {GHCR_IMAGE or '(not set)'}")
     log.info(f"Docker Hub image: {CUSTOM_IMAGE or '(not set)'}")
 
-    # Step 1: Get latest Caddy release
+    # Latest Caddy release
     latest_gh_tag = get_latest_caddy_release()
     docker_tag = latest_gh_tag.lstrip("v")
     log.set_summary("Caddy Release", latest_gh_tag)
 
-    # Step 2: Check official Caddy image on Docker Hub
+    # Step 1: Check official Caddy image on Docker Hub
     log.info(f"\nStep 1: Checking official image '{OFFICIAL_CADDY_IMAGE}:{docker_tag}'...")
     official_image_ready = _check_official_image(docker_tag)
 
@@ -55,11 +56,11 @@ def main():
         log.print_summary()
         sys.exit(0)
 
-    # Step 3: Check custom image on GHCR + Docker Hub
+    # Step 2: Check custom image on GHCR + Docker Hub
     log.info(f"\nStep 2: Checking custom image status...")
     custom_image_complete = _check_custom_image(docker_tag)
 
-    # Step 4: Check module updates
+    # Step 3: Check module updates
     log.info(f"\nStep 3: Checking module updates...")
     modules_changed, changed_modules, updated_module_state = check_module_updates()
     save_module_versions(updated_module_state, dry_run)
@@ -69,7 +70,14 @@ def main():
     else:
         log.set_summary("Module Changes", "None")
 
-    # Step 5: Final decision
+    # Step 4: Check if the official image was republished (base OS / Go fixes).
+    # Only worth the requests when nothing above already forces a build.
+    base_image_updated = False
+    if custom_image_complete and not modules_changed:
+        log.info(f"\nStep 4: Checking official base image updates...")
+        base_image_updated = check_base_image_updates(docker_tag)
+
+    # Final decision
     needs_build = False
     build_reason = "none"
 
@@ -79,6 +87,9 @@ def main():
     elif modules_changed:
         needs_build = True
         build_reason = "module_update"
+    elif base_image_updated:
+        needs_build = True
+        build_reason = "base_image_update"
 
     log.set_summary("Build Decision", f"{'Yes' if needs_build else 'No'} (reason: {build_reason})")
     _set_outputs(needs_build=needs_build, version=latest_gh_tag, reason=build_reason, module_update=modules_changed, dry_run=dry_run)

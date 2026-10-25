@@ -25,6 +25,9 @@ REQUIRED_PLATFORMS = {
     "linux/s390x",
 }
 
+# Image variants as tag suffixes — must match the build workflows
+VARIANT_SUFFIXES = ["", "-alpine"]
+
 # Modules built into the Docker image — must match Dockerfile
 MODULES = [
     {"module": "github.com/caddy-dns/cloudflare", "repo": "caddy-dns/cloudflare"},
