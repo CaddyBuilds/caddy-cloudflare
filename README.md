@@ -194,6 +194,7 @@ With this setup:
 - Caddy marks each request with `trusted_proxy` based on whether the connecting IP is in Cloudflare's published ranges, which `caddy-cloudflare-ip` keeps up to date. No hardcoded IP list is needed.
 - Direct requests have their connection closed. Use `respond @notCloudflare 403` instead of `abort` if you prefer an explicit error.
 - Certificate issuance is unaffected, since the DNS-01 challenge does not use inbound HTTP.
+- Not for [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) setups: tunneled traffic arrives from your local `cloudflared`, not Cloudflare's IPs, so every request would be rejected.
 
 Requires an image from `v2.11.0` or later (see [Tags](#tags)). Add the matcher to each site block you want to protect. This checks the source IP only; for stronger guarantees, also restrict ports 80/443 to Cloudflare at your firewall, or use [Authenticated Origin Pulls](https://developers.cloudflare.com/ssl/origin-configuration/authenticated-origin-pull/).
 
