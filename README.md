@@ -223,6 +223,14 @@ The image is available on [GitHub Container Registry](https://github.com/caddybu
 
 > **Note:** Starting from `v2.11.0`, the image includes the `caddy-cloudflare-ip` and `caddy-combine-ip-ranges` modules by default.
 
+### Why did a digest change?
+
+Images are rebuilt without a new Caddy version when a module gets new commits or the official Caddy image is republished with OS or Go fixes. Each rebuild is logged under **Rebuilds** in that version's [GitHub Release](https://github.com/caddybuilds/caddy-cloudflare/releases), and the reason is stored in the image labels:
+
+```sh
+docker inspect --format '{{ index .Config.Labels "caddy-build.reason" }}: {{ index .Config.Labels "caddy-build.details" }}' ghcr.io/caddybuilds/caddy-cloudflare:latest
+```
+
 ## Platform Support
 
 The image is built for the following platforms:

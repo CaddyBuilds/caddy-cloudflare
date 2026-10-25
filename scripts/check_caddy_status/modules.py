@@ -2,7 +2,7 @@ import json
 from datetime import datetime, timezone
 
 from .config import MODULE_VERSIONS_FILE, MODULES
-from .github_api import get_latest_commit_sha
+from .github_api import get_latest_commit
 from .logger import log
 
 
@@ -38,8 +38,9 @@ def check_module_updates():
     """Checks if any tracked modules have new commits.
 
     Returns:
-        tuple: (modules_changed, changed_module_names, updated_state)
-        First run (empty state) populates SHAs without triggering a build.
+        tuple: (modules_changed, details, updated_state)
+        details is a list of human-readable change descriptions, used in release notes.
+        First run (empty state) records SHAs and triggers a build.
     """
     stored = load_module_versions()
     is_first_run = not stored.get("modules")
@@ -51,7 +52,7 @@ def check_module_updates():
         repo = mod["repo"]
         log.info(f"  Checking module: {module_name}")
 
-        current_sha = get_latest_commit_sha(repo)
+        current_sha, subject = get_latest_commit(repo)
         if not current_sha:
             log.warn(f"  Could not fetch SHA for {repo}, skipping")
             # Preserve existing entry
@@ -70,13 +71,13 @@ def check_module_updates():
         if is_first_run:
             log.info(f"    First run — recorded SHA: {current_sha[:12]}")
         elif stored_sha and current_sha != stored_sha:
-            changed_modules.append(module_name)
+            changed_modules.append(f"{repo} {stored_sha[:7]}..{current_sha[:7]} ({subject})" if subject else f"{repo} {stored_sha[:7]}..{current_sha[:7]}")
             log.info(f"    CHANGED: {stored_sha[:12]} -> {current_sha[:12]}")
         else:
             log.info(f"    Unchanged: {current_sha[:12]}")
 
     if is_first_run:
         log.info("  First run — recorded SHAs, triggering build to ensure image is fresh")
-        return True, ["first_run"], updated_state
+        return True, ["first run, module versions recorded"], updated_state
 
     return len(changed_modules) > 0, changed_modules, updated_state

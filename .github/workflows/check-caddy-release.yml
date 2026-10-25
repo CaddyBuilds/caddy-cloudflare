@@ -18,10 +18,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '>=3.11'
 
@@ -47,12 +47,16 @@ jobs:
 
       - name: Trigger Build Workflow if Needed
         if: steps.check_script.outputs.NEEDS_BUILD == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
+        # Passed via env, not interpolated: details include upstream commit subjects
+        env:
+          VERSION: ${{ steps.check_script.outputs.LATEST_VERSION }}
+          REASON: ${{ steps.check_script.outputs.BUILD_REASON }}
+          DETAILS: ${{ steps.check_script.outputs.BUILD_DETAILS }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const version = '${{ steps.check_script.outputs.LATEST_VERSION }}';
-            const reason = '${{ steps.check_script.outputs.BUILD_REASON }}';
+            const { VERSION: version, REASON: reason, DETAILS: details } = process.env;
             console.log(`Build required for Caddy ${version} (reason: ${reason}). Dispatching...`);
             try {
               await github.rest.repos.createDispatchEvent({
@@ -61,7 +65,8 @@ jobs:
                 event_type: 'caddy-release',
                 client_payload: {
                   caddy_version: version,
-                  build_reason: reason
+                  build_reason: reason,
+                  build_details: details
                 }
               });
               console.log(`Successfully dispatched event for ${version}.`);

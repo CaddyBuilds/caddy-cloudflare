@@ -26,6 +26,7 @@ jobs:
       flavor_latest: "false"
       create_release: false
       build_reason: ${{ github.event.client_payload.build_reason || 'manual' }}
+      build_details: ${{ github.event.client_payload.build_details || '' }}
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}

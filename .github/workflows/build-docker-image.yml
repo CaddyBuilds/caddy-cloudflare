@@ -44,6 +44,11 @@ on:
         required: false
         type: string
         default: ''
+      build_details:
+        description: 'What changed, e.g. module commits or republished base tags. Shown in release notes and image labels.'
+        required: false
+        type: string
+        default: ''
     secrets:
       DOCKERHUB_USERNAME:
         required: false
@@ -62,23 +67,23 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -116,7 +121,7 @@ jobs:
 
       - name: Docker Metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ghcr.io/${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}
@@ -137,10 +142,12 @@ jobs:
             org.opencontainers.image.version=${{ env.VERSION }}${{ inputs.tag_suffix }}
             org.opencontainers.image.licenses=MIT
             org.opencontainers.image.vendor=${{ github.repository_owner }}
+            caddy-build.reason=${{ inputs.build_reason || 'manual' }}
+            caddy-build.details=${{ inputs.build_details }}
 
       - name: Build and push Docker image
         id: build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ${{ inputs.dockerfile }}
@@ -162,23 +169,28 @@ jobs:
           docker run --rm "${IMAGE}" caddy list-modules | grep -q "dns.providers.cloudflare"
           echo "Build verification passed."
 
-      # Module and base image rebuilds republish an existing version — the release step
-      # would overwrite that version's notes, so only run it for new versions or manual builds.
-      - name: Create GitHub Release
-        if: ${{ inputs.create_release && (inputs.build_reason == 'new_caddy_version' || inputs.build_reason == 'manual') }}
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ env.VERSION }}
-          name: "Caddy v${{ env.VERSION }}"
-          body: |
-            New Caddy release detected (build reason: ${{ inputs.build_reason || 'manual' }}).
-            See the full release notes [here](https://github.com/caddyserver/caddy/releases/tag/v${{ env.VERSION }}).
-          draft: false
-          prerelease: false
+      # New version: create its release. Rebuild of an existing version: append a dated
+      # line under "Rebuilds" so a changed digest can be traced back to its cause.
+      - name: Create or update GitHub Release
+        if: ${{ inputs.create_release }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REASON: ${{ inputs.build_reason || 'manual' }}
+          DETAILS: ${{ inputs.build_details }}
+        run: |
+          if ! body=$(gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" --json body --jq .body 2>/dev/null); then
+            gh release create "$VERSION" --repo "$GITHUB_REPOSITORY" \
+              --title "Caddy v$VERSION" \
+              --notes "Caddy v$VERSION with Cloudflare DNS modules. See the full release notes [here](https://github.com/caddyserver/caddy/releases/tag/v$VERSION)."
+            exit 0
+          fi
+          case "$body" in *"## Rebuilds"*) ;; *) body="$(printf '%s\n\n## Rebuilds\n' "$body")" ;; esac
+          line="- $(date -u +%Y-%m-%d): ${REASON//_/ }${DETAILS:+ — $DETAILS}"
+          printf '%s\n%s\n' "$body" "$line" | gh release edit "$VERSION" --repo "$GITHUB_REPOSITORY" --notes-file -
 
       - name: Notify on failure
         if: failure()
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const suffix = '${{ inputs.tag_suffix }}' || 'standard';
