@@ -3,73 +3,16 @@ name: Check Caddy Releases and Trigger Build
 on:
   schedule:
     - cron: '0 0 * * *'
-  workflow_dispatch: # Allows manual triggering
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
-  check_and_trigger:
-    name: Check Caddy Release and Trigger Build if Needed
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: '>=3.11'
-
-      - name: Install Python dependencies
-        run: pip install requests
-
-      - name: Check Caddy release status and module updates
-        id: check_script
-        env:
-          DOCKERHUB_REPOSITORY_NAME: ${{ vars.DOCKERHUB_REPOSITORY_NAME || secrets.DOCKERHUB_REPOSITORY_NAME }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python -m check_caddy_status
-        working-directory: scripts
-
-      - name: Commit updated module versions
-        if: steps.check_script.outputs.MODULE_UPDATE == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add module-versions.json
-          git diff --staged --quiet || git commit -m "chore: update module version tracking [skip ci]"
-          git push
-
-      - name: Trigger Build Workflow if Needed
-        if: steps.check_script.outputs.NEEDS_BUILD == 'true'
-        uses: actions/github-script@v9
-        # Passed via env, not interpolated: details include upstream commit subjects
-        env:
-          VERSION: ${{ steps.check_script.outputs.LATEST_VERSION }}
-          REASON: ${{ steps.check_script.outputs.BUILD_REASON }}
-          DETAILS: ${{ steps.check_script.outputs.BUILD_DETAILS }}
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const { VERSION: version, REASON: reason, DETAILS: details } = process.env;
-            console.log(`Build required for Caddy ${version} (reason: ${reason}). Dispatching...`);
-            try {
-              await github.rest.repos.createDispatchEvent({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                event_type: 'caddy-release',
-                client_payload: {
-                  caddy_version: version,
-                  build_reason: reason,
-                  build_details: details
-                }
-              });
-              console.log(`Successfully dispatched event for ${version}.`);
-            } catch (error) {
-              core.setFailed(`Failed to dispatch event: ${error.message}`);
-            }
+  check:
+    uses: CaddyBuilds/caddy-base/.github/workflows/check-release.yml@v1
+    secrets: inherit

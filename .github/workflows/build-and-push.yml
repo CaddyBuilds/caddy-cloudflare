@@ -15,20 +15,9 @@ permissions:
 
 jobs:
   build:
-    uses: ./.github/workflows/build-docker-image.yml
+    uses: CaddyBuilds/caddy-base/.github/workflows/build-image.yml@v1
     with:
       caddy_version: ${{ github.event.inputs.build_version || github.event.client_payload.caddy_version }}
-      dockerfile: Dockerfile
-      # The official Linux image is Alpine-based; -alpine tags are kept for existing users
-      alias_suffix: "-alpine"
-      static_tag: "alpine"
-      image_title: Caddy Cloudflare
-      image_description: Caddy with Cloudflare DNS module
-      flavor_latest: "auto"
-      create_release: true
       build_reason: ${{ github.event.client_payload.build_reason || 'manual' }}
       build_details: ${{ github.event.client_payload.build_details || '' }}
-    secrets:
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-      DOCKERHUB_REPOSITORY_NAME: ${{ secrets.DOCKERHUB_REPOSITORY_NAME }}
+    secrets: inherit

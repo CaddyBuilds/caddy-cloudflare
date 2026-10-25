@@ -337,15 +337,15 @@ docker run --rm ghcr.io/caddybuilds/caddy-cloudflare:latest caddy list-modules |
 
 ## How It Works
 
-The build pipeline is fully automated via GitHub Actions:
+The build pipeline is fully automated via GitHub Actions and shared with the other CaddyBuilds images through [caddy-base](https://github.com/CaddyBuilds/caddy-base). This repo holds only what is specific to this image: the `Dockerfile` (module list), `caddy-image.json` (title, description, verified module) and two thin workflows that call the shared ones.
 
 1. **Daily release check** -- A scheduled workflow queries the GitHub API for new [Caddy releases](https://github.com/caddyserver/caddy/releases) and verifies the official Docker image is available with all required platforms before triggering a build.
 
-2. **Module update detection** -- The pipeline tracks the latest commit SHA of each included module in `module-versions.json`. If any module has new commits, a rebuild is triggered even without a new Caddy release.
+2. **Module update detection** -- The pipeline reads the module list from the `Dockerfile` and tracks each module's latest commit SHA in `module-versions.json`. If any module has new commits, a rebuild is triggered even without a new Caddy release.
 
 3. **Base image tracking** -- Docker Official Images republish existing Caddy versions for base OS and Go toolchain fixes. The check compares when the official image was last pushed with when ours was built, and rebuilds if upstream is newer.
 
-4. **Multi-platform build** -- A reusable workflow builds the image for all supported architectures. Images are pushed to GitHub Container Registry (primary) and optionally Docker Hub.
+4. **Multi-platform build** -- The shared workflow builds the image for all supported architectures. Images are pushed to GitHub Container Registry (primary) and optionally Docker Hub.
 
 5. **Fork-friendly** -- Image names are derived from the `GITHUB_REPOSITORY` environment variable, so forks produce correctly named images without any configuration changes.
 
@@ -374,10 +374,13 @@ The build pipeline is fully automated via GitHub Actions:
 3. **Enable GitHub Actions**:
    - Go to the `Actions` tab. If prompted, click "I understand my workflows, go ahead and enable them".
 
-4. **Trigger a build** (optional):
+4. **Customize the modules** (optional):
+   - Add or change `--with` lines in the `Dockerfile`; the daily check follows the list from there. Adjust the title and description in `caddy-image.json` if you like.
+
+5. **Trigger a build** (optional):
    - In the `Actions` tab, select `Build and Push Docker Image` and click `Run workflow`.
 
-5. **Pull your image**:
+6. **Pull your image**:
    ```sh
    docker pull ghcr.io/YOUR_GITHUB_USERNAME/YOUR_REPOSITORY_NAME:latest
    ```
