@@ -119,28 +119,35 @@ jobs:
             echo "Warning: DOCKERHUB_USERNAME or DOCKERHUB_TOKEN not set. Docker Hub image will not be pushed."
           fi
 
+      # Defaults cover url, source, licenses, created, revision and version (suffix included).
+      # Labels feed `docker inspect`; GHCR reads a multi-arch image's description from the
+      # index annotations, so the overrides go in both.
       - name: Docker Metadata
         id: meta
         uses: docker/metadata-action@v6
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
         with:
           images: |
             ghcr.io/${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}
             ${{ env.DOCKERHUB_IMAGE }}
           flavor: |
             latest=${{ inputs.flavor_latest }}
+            suffix=${{ inputs.tag_suffix }}
           tags: |
-            type=raw,value=${{ env.VERSION }}${{ inputs.tag_suffix }}
-            ${{ inputs.static_tag != '' && format('type=raw,value={0}', inputs.static_tag) || '' }}
-            type=semver,pattern={{version}}${{ inputs.tag_suffix }},value=${{ env.VERSION }}
-            type=semver,pattern={{major}}.{{minor}}${{ inputs.tag_suffix }},value=${{ env.VERSION }}
-            type=semver,pattern={{major}}${{ inputs.tag_suffix }},value=${{ env.VERSION }}
+            type=semver,pattern={{version}},value=${{ env.VERSION }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.VERSION }}
+            type=semver,pattern={{major}},value=${{ env.VERSION }}
+            type=raw,value=${{ inputs.static_tag }},suffix=,enable=${{ inputs.static_tag != '' }}
           labels: |
             org.opencontainers.image.title=${{ inputs.image_title }}
             org.opencontainers.image.description=${{ inputs.image_description }}
-            org.opencontainers.image.url=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.version=${{ env.VERSION }}${{ inputs.tag_suffix }}
-            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
+            caddy-build.reason=${{ inputs.build_reason || 'manual' }}
+            caddy-build.details=${{ inputs.build_details }}
+          annotations: |
+            org.opencontainers.image.title=${{ inputs.image_title }}
+            org.opencontainers.image.description=${{ inputs.image_description }}
             org.opencontainers.image.vendor=${{ github.repository_owner }}
             caddy-build.reason=${{ inputs.build_reason || 'manual' }}
             caddy-build.details=${{ inputs.build_details }}
@@ -157,6 +164,7 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
 
       - name: Verify built image
         run: |
