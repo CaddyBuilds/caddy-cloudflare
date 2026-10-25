@@ -25,7 +25,7 @@ REQUIRED_PLATFORMS = {
     "linux/s390x",
 }
 
-# Image variants as tag suffixes — must match the build workflows
+# Tag suffixes the build workflow pushes (one image, -alpine is an alias) — must match it
 VARIANT_SUFFIXES = ["", "-alpine"]
 
 # Modules built into the Docker image — must match Dockerfile

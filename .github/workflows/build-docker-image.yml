@@ -11,8 +11,8 @@ on:
         description: 'Dockerfile to use'
         required: true
         type: string
-      tag_suffix:
-        description: 'Suffix for tags (e.g., "-alpine"). Leave empty for standard.'
+      alias_suffix:
+        description: 'Also push the version tags with this suffix (e.g., "-alpine"). Leave empty for none.'
         required: false
         type: string
         default: ''
@@ -133,11 +133,13 @@ jobs:
             ${{ env.DOCKERHUB_IMAGE }}
           flavor: |
             latest=${{ inputs.flavor_latest }}
-            suffix=${{ inputs.tag_suffix }}
           tags: |
             type=semver,pattern={{version}},value=${{ env.VERSION }}
             type=semver,pattern={{major}}.{{minor}},value=${{ env.VERSION }}
             type=semver,pattern={{major}},value=${{ env.VERSION }}
+            type=semver,pattern={{version}},value=${{ env.VERSION }},suffix=${{ inputs.alias_suffix }},enable=${{ inputs.alias_suffix != '' }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.VERSION }},suffix=${{ inputs.alias_suffix }},enable=${{ inputs.alias_suffix != '' }}
+            type=semver,pattern={{major}},value=${{ env.VERSION }},suffix=${{ inputs.alias_suffix }},enable=${{ inputs.alias_suffix != '' }}
             type=raw,value=${{ inputs.static_tag }},suffix=,enable=${{ inputs.static_tag != '' }}
           labels: |
             org.opencontainers.image.title=${{ inputs.image_title }}
@@ -168,7 +170,7 @@ jobs:
 
       - name: Verify built image
         run: |
-          IMAGE="ghcr.io/${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}:${{ env.VERSION }}${{ inputs.tag_suffix }}"
+          IMAGE="ghcr.io/${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}:${{ env.VERSION }}"
           echo "Pulling ${IMAGE}..."
           docker pull "${IMAGE}"
           echo "Checking caddy version..."
@@ -201,11 +203,10 @@ jobs:
         uses: actions/github-script@v9
         with:
           script: |
-            const suffix = '${{ inputs.tag_suffix }}' || 'standard';
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Build failed: Caddy v${{ env.VERSION }} (${suffix})`,
-              body: `The automated build failed.\n\n- **Version:** ${{ env.VERSION }}\n- **Variant:** ${suffix}\n- **Reason:** ${{ inputs.build_reason || 'manual' }}\n- **Run:** ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              title: `Build failed: Caddy v${{ env.VERSION }}`,
+              body: `The automated build failed.\n\n- **Version:** ${{ env.VERSION }}\n- **Reason:** ${{ inputs.build_reason || 'manual' }}\n- **Run:** ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
               labels: ['build-failure']
             });

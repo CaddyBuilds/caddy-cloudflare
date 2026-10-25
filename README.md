@@ -35,7 +35,7 @@ Automated, multi-platform Docker builds of [Caddy](https://caddyserver.com/) wit
 - **Cloudflare DNS-01 Integration** -- Automatic SSL certificate management via DNS challenges.
 - **Cloudflare IP Trust** -- Real client IPs preserved when proxying through Cloudflare.
 - **Multi-Platform** -- Supports `amd64`, `arm64`, `arm/v7` (Raspberry Pi), `ppc64le`, and `s390x`.
-- **Alpine Variant** -- Lightweight Alpine-based image for smaller footprint.
+- **Alpine-Based** -- Built on the official Caddy image, which uses Alpine Linux.
 - **Fork-Friendly** -- Image names derived automatically from your GitHub repository.
 
 ## Quick Start
@@ -87,13 +87,8 @@ These modules are compiled into Caddy at build time using [xcaddy](https://githu
 ### Docker Pull
 
 ```sh
-# Standard image
 docker pull ghcr.io/caddybuilds/caddy-cloudflare:latest
 docker pull caddybuilds/caddy-cloudflare:latest
-
-# Alpine variant
-docker pull ghcr.io/caddybuilds/caddy-cloudflare:alpine
-docker pull caddybuilds/caddy-cloudflare:alpine
 ```
 
 See [Quick Start](#quick-start) for a full docker-compose setup.
@@ -281,11 +276,10 @@ This is equivalent to specifying the provider in the [tls directive's ACME issue
 The image is available on [GitHub Container Registry](https://github.com/caddybuilds/caddy-cloudflare/pkgs/container/caddy-cloudflare) and Docker Hub with the following tags:
 
 - **`latest`** -- Most recent stable release with the Cloudflare DNS module.
-- **`alpine`** -- Most recent stable release of the Alpine-based image.
 - **`<version>`** -- Full version pin (e.g., `docker pull ghcr.io/caddybuilds/caddy-cloudflare:X.Y.Z`).
 - **`<major>.<minor>`** -- Latest patch within a minor series (e.g., `2.11`).
 - **`<major>`** -- Latest release within a major series (e.g., `2`).
-- **`<version>-alpine`**, **`<major>.<minor>-alpine`**, **`<major>-alpine`** -- Alpine variants of the version tags above (e.g., `X.Y.Z-alpine`, `2.11-alpine`, `2-alpine`).
+- **`alpine`**, **`<version>-alpine`**, **`<major>.<minor>-alpine`**, **`<major>-alpine`** -- Aliases of the tags above, kept for compatibility. They point to the same image.
 
 > **Note:** Starting from `v2.11.0`, the image includes the `caddy-cloudflare-ip` and `caddy-combine-ip-ranges` modules by default.
 
@@ -309,7 +303,7 @@ The image is built for the following platforms:
 
 ### Alpine
 
-The Alpine-based image uses [Alpine Linux](https://alpinelinux.org/) as its base, resulting in a significantly smaller image. Alpine uses musl libc instead of glibc, which may cause compatibility issues with some software. Additional tools (git, bash, etc.) are not included by default.
+The image is built on the official Caddy image, which uses [Alpine Linux](https://alpinelinux.org/) on Linux. Alpine uses musl libc instead of glibc, which may cause compatibility issues with some software. Additional tools (git, bash, etc.) are not included by default.
 
 ### Raspberry Pi
 
@@ -351,7 +345,7 @@ The build pipeline is fully automated via GitHub Actions:
 
 3. **Base image tracking** -- Docker Official Images republish existing Caddy versions for base OS and Go toolchain fixes. The check compares when the official image was last pushed with when ours was built, and rebuilds if upstream is newer.
 
-4. **Multi-platform build** -- A reusable workflow handles both standard and Alpine builds, producing images for all supported architectures. Images are pushed to GitHub Container Registry (primary) and optionally Docker Hub.
+4. **Multi-platform build** -- A reusable workflow builds the image for all supported architectures. Images are pushed to GitHub Container Registry (primary) and optionally Docker Hub.
 
 5. **Fork-friendly** -- Image names are derived from the `GITHUB_REPOSITORY` environment variable, so forks produce correctly named images without any configuration changes.
 
@@ -381,7 +375,7 @@ The build pipeline is fully automated via GitHub Actions:
    - Go to the `Actions` tab. If prompted, click "I understand my workflows, go ahead and enable them".
 
 4. **Trigger a build** (optional):
-   - In the `Actions` tab, select `Build and Push Standard Docker Image` (or the Alpine variant) and click `Run workflow`.
+   - In the `Actions` tab, select `Build and Push Docker Image` and click `Run workflow`.
 
 5. **Pull your image**:
    ```sh
