@@ -168,6 +168,35 @@ With this setup:
 - Requests proxied through Cloudflare will correctly populate `X-Forwarded-For` headers.
 - Access logs will show the **real client IP** instead of Cloudflare's edge server IPs.
 
+#### Cloudflare-Only Access
+
+Reject requests that reach your origin directly instead of through Cloudflare's proxy:
+
+```
+{
+  acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+
+  servers {
+    trusted_proxies cloudflare
+    client_ip_headers Cf-Connecting-Ip
+  }
+}
+
+example.com {
+    @notCloudflare vars trusted_proxy false
+    abort @notCloudflare
+
+    reverse_proxy localhost:8080
+}
+```
+
+With this setup:
+- Caddy marks each request with `trusted_proxy` based on whether the connecting IP is in Cloudflare's published ranges, which `caddy-cloudflare-ip` keeps up to date. No hardcoded IP list is needed.
+- Direct requests have their connection closed. Use `respond @notCloudflare 403` instead of `abort` if you prefer an explicit error.
+- Certificate issuance is unaffected, since the DNS-01 challenge does not use inbound HTTP.
+
+Requires an image from `v2.11.0` or later (see [Tags](#tags)). Add the matcher to each site block you want to protect. This checks the source IP only; for stronger guarantees, also restrict ports 80/443 to Cloudflare at your firewall, or use [Authenticated Origin Pulls](https://developers.cloudflare.com/ssl/origin-configuration/authenticated-origin-pull/).
+
 ## Configuration
 
 ### Creating a Cloudflare API Token
