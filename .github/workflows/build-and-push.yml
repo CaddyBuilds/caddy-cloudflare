@@ -8,6 +8,9 @@ on:
       build_version:
         description: 'Caddy version to build (without v prefix, e.g., 2.8.0)'
         required: false
+      note:
+        description: 'Why you are building; shown in the release notes and image label'
+        required: false
 
 permissions:
   contents: write
@@ -19,5 +22,5 @@ jobs:
     with:
       caddy_version: ${{ github.event.inputs.build_version || github.event.client_payload.caddy_version }}
       build_reason: ${{ github.event.client_payload.build_reason || 'manual' }}
-      build_details: ${{ github.event.client_payload.build_details || '' }}
+      build_details: ${{ github.event.inputs.note || github.event.client_payload.build_details || '' }}
     secrets: inherit
