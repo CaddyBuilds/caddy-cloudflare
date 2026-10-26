@@ -1,6 +1,8 @@
 # Build stage: runs on the build host and cross-compiles for the target platform.
 # Go cross-compiles natively, so the slow compile step needs no QEMU emulation.
-ARG CADDY_VERSION
+# Caddy version to build. CI always passes the exact version; the default lets a plain
+# `docker build .` build the latest Caddy 2.
+ARG CADDY_VERSION=2
 FROM --platform=$BUILDPLATFORM caddy:${CADDY_VERSION}-builder AS builder
 ARG TARGETOS TARGETARCH TARGETVARIANT
 
