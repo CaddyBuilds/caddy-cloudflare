@@ -35,7 +35,7 @@ Automated, multi-platform Docker builds of [Caddy](https://caddyserver.com/) wit
 - **Cloudflare DNS-01 Integration** -- Automatic SSL certificate management via DNS challenges.
 - **Cloudflare IP Trust** -- Real client IPs preserved when proxying through Cloudflare.
 - **Multi-Platform** -- Supports `amd64`, `arm64`, `arm/v7` (Raspberry Pi), `ppc64le`, and `s390x`.
-- **Alpine-Based** -- Built on the official Caddy image, which uses Alpine Linux.
+- **Alpine-Based** -- Built on the official Caddy image, which uses Alpine Linux. A `slim` variant drops the stock binary.
 - **Fork-Friendly** -- Image names derived automatically from your GitHub repository.
 
 ## Quick Start
@@ -280,12 +280,13 @@ The image is available on [GitHub Container Registry](https://github.com/caddybu
 - **`<major>.<minor>`** -- Latest patch within a minor series (e.g., `2.11`).
 - **`<major>`** -- Latest release within a major series (e.g., `2`).
 - **`alpine`**, **`<version>-alpine`**, **`<major>.<minor>-alpine`**, **`<major>-alpine`** -- Aliases of the tags above, kept for compatibility. They point to the same image.
+- **`slim`**, **`<version>-slim`**, **`<major>.<minor>-slim`**, **`<major>-slim`** -- The same binary on [caddy-base](https://github.com/CaddyBuilds/caddy-base#the-caddy-base-image), an Alpine image with everything the official image has except its stock Caddy binary. Same packages, directories, default Caddyfile, ports and command; smaller because it carries one binary instead of two.
 
 > **Note:** Starting from `v2.11.0`, the image includes the `caddy-cloudflare-ip` and `caddy-combine-ip-ranges` modules by default.
 
 ### Why did a digest change?
 
-Images are rebuilt without a new Caddy version when a module gets new commits or the official Caddy image is republished with OS or Go fixes. Each rebuild is logged under **Rebuilds** in that version's [GitHub Release](https://github.com/caddybuilds/caddy-cloudflare/releases), and the reason is stored in the image labels:
+Images are rebuilt without a new Caddy version when a module gets new commits or a base image is republished with OS or Go fixes (the official Caddy image for the default tags, the caddy-base image for `slim`). Each rebuild is logged under **Rebuilds** in that version's [GitHub Release](https://github.com/caddybuilds/caddy-cloudflare/releases), and the reason is stored in the image labels:
 
 ```sh
 docker inspect --format '{{ index .Config.Labels "caddy-build.reason" }}: {{ index .Config.Labels "caddy-build.details" }}' ghcr.io/caddybuilds/caddy-cloudflare:latest
