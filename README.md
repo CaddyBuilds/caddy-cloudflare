@@ -46,7 +46,7 @@ Automated, multi-platform Docker builds of [Caddy](https://caddyserver.com/) wit
 
 - **Automated Builds** -- Daily checks for new Caddy releases with automatic image builds.
 - **Module Update Detection** -- Tracks upstream module commits and rebuilds when dependencies change.
-- **Base Image Tracking** -- Rebuilds when the official Caddy image is republished with OS or Go toolchain fixes.
+- **Base Image Tracking** -- Rebuilds when the base image is republished with OS or Go toolchain fixes.
 - **Cloudflare DNS-01 Integration** -- Automatic SSL certificate management via DNS challenges.
 - **Cloudflare IP Trust** -- Real client IPs preserved when proxying through Cloudflare.
 - **Multi-Platform** -- Supports `amd64`, `arm64`, `arm/v7` (Raspberry Pi), `ppc64le`, and `s390x`.
@@ -379,9 +379,9 @@ The build pipeline is fully automated via GitHub Actions and shared with the oth
 
 2. **Module update detection** -- The pipeline reads the module list from the `Dockerfile` and tracks each module's latest commit SHA in `module-versions.json`. If any module has new commits, a rebuild is triggered even without a new Caddy release.
 
-3. **Base image tracking** -- Docker Official Images republish existing Caddy versions for base OS and Go toolchain fixes. The check compares when the official image was last pushed with when ours was built, and rebuilds if upstream is newer.
+3. **Base image tracking** -- Docker Official Images republish existing Caddy versions for base OS and Go toolchain fixes, and caddy-base is rebuilt when Alpine is republished. The check compares each base image with when ours was built, and rebuilds if the base is newer.
 
-4. **Multi-platform build** -- The shared workflow builds the image for all supported architectures. Images are pushed to GitHub Container Registry (primary) and optionally Docker Hub.
+4. **Multi-platform build** -- The shared workflow builds the default and slim images for all supported architectures. Images are pushed to GitHub Container Registry (primary) and optionally Docker Hub.
 
 5. **Fork-friendly** -- Image names are derived from the `GITHUB_REPOSITORY` environment variable, so forks produce correctly named images without any configuration changes.
 
@@ -414,7 +414,7 @@ The build pipeline is fully automated via GitHub Actions and shared with the oth
    - Add or change `--with` lines in the `Dockerfile`; the daily check follows the list from there. Adjust the title and description in `caddy-image.json` if you like.
 
 5. **Trigger a build** (optional):
-   - In the `Actions` tab, select `Build and Push Docker Image` and click `Run workflow`.
+   - In the `Actions` tab, select `Build and Push Docker Image` and click `Run workflow`. The optional note is recorded in the release notes.
 
 6. **Pull your image**:
    ```sh
