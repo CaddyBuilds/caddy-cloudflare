@@ -273,14 +273,34 @@ This is equivalent to specifying the provider in the [tls directive's ACME issue
 
 ## Tags
 
-The image is available on [GitHub Container Registry](https://github.com/caddybuilds/caddy-cloudflare/pkgs/container/caddy-cloudflare) and Docker Hub with the following tags:
+The image is available on [GitHub Container Registry](https://github.com/caddybuilds/caddy-cloudflare/pkgs/container/caddy-cloudflare) and Docker Hub. There are two images, default and slim, each under a few tags:
 
-- **`latest`** -- Most recent stable release with the Cloudflare DNS module.
-- **`<version>`** -- Full version pin (e.g., `docker pull ghcr.io/caddybuilds/caddy-cloudflare:X.Y.Z`).
-- **`<major>.<minor>`** -- Latest patch within a minor series (e.g., `2.11`).
-- **`<major>`** -- Latest release within a major series (e.g., `2`).
-- **`alpine`**, **`<version>-alpine`**, **`<major>.<minor>-alpine`**, **`<major>-alpine`** -- Aliases of the tags above, kept for compatibility. They point to the same image.
-- **`slim`**, **`<version>-slim`**, **`<major>.<minor>-slim`**, **`<major>-slim`** -- The same binary on [caddy-base](https://github.com/CaddyBuilds/caddy-base#the-caddy-base-image), an Alpine image with everything the official image has except its stock Caddy binary. Same packages, directories, default Caddyfile, ports and command; smaller because it carries one binary instead of two.
+| Tags | Image |
+|------|-------|
+| `latest`, `<version>`, `<major>.<minor>`, `<major>` | Default |
+| `alpine`, `<version>-alpine`, `<major>.<minor>-alpine`, `<major>-alpine` | Default (same image, see below) |
+| `slim`, `<version>-slim`, `<major>.<minor>-slim`, `<major>-slim` | Slim |
+
+`<version>` pins a release (e.g. `2.11.7`), `<major>.<minor>` follows the latest patch (e.g. `2.11`) and `<major>` the latest release (e.g. `2`). Slim tags exist from `2.11.7` onward.
+
+### Default or slim?
+
+Both run the same Caddy binary with the same modules. They differ only in the image underneath.
+
+| | Default | Slim |
+|---|---|---|
+| Built on | The official [Caddy image](https://hub.docker.com/_/caddy) | [caddy-base](https://github.com/CaddyBuilds/caddy-base#the-caddy-base-image): the official image without its Caddy binary |
+| Download size (amd64) | about 43 MB | about 24 MB |
+| Caddy binaries inside | Two: the stock one stays in a lower layer, ours replaces it on top | One: ours |
+| Rebuilt for base fixes when | The official Caddy image is republished | Alpine is republished (caddy-base rebuilds, then slim follows) |
+
+Everything else is the same: Alpine, packages, default Caddyfile, `/data` and `/config`, ports, command, platforms, and permission to bind ports 80 and 443 as a non-root user.
+
+Use **slim** for a smaller image. Use **default** if you want to stay on the Docker Official Image exactly as Caddy ships it.
+
+### Why `alpine` tags point to the same image
+
+This follows the official Caddy image. On Linux, `caddy:latest`, `caddy:2.11.7` and `caddy:2.11.7-alpine` are all the same Alpine image. The plain tags also include Windows builds, which is the only reason both exist. We only build Linux images, so the `-alpine` tags are aliases: a setup that uses `caddy:2.11.7-alpine` can switch to `caddy-cloudflare:2.11.7-alpine` without changing anything else.
 
 > **Note:** Starting from `v2.11.0`, the image includes the `caddy-cloudflare-ip` and `caddy-combine-ip-ranges` modules by default.
 
@@ -304,7 +324,7 @@ The image is built for the following platforms:
 
 ### Alpine
 
-The image is built on the official Caddy image, which uses [Alpine Linux](https://alpinelinux.org/) on Linux. Alpine uses musl libc instead of glibc, which may cause compatibility issues with some software. Additional tools (git, bash, etc.) are not included by default.
+Both images are built on [Alpine Linux](https://alpinelinux.org/): the default through the official Caddy image, slim through caddy-base. Alpine uses musl libc instead of glibc, which may cause compatibility issues with some software. Additional tools (git, bash, etc.) are not included by default.
 
 ### Raspberry Pi
 
