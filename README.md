@@ -373,7 +373,7 @@ docker run --rm ghcr.io/caddybuilds/caddy-cloudflare:latest caddy list-modules |
 
 ## How It Works
 
-The build pipeline is fully automated via GitHub Actions and shared with the other CaddyBuilds images through [caddy-base](https://github.com/CaddyBuilds/caddy-base). This repo holds only what is specific to this image: the `Dockerfile` (module list), `caddy-image.json` (title, description, verified module) and two thin workflows that call the shared ones.
+The build pipeline is fully automated via GitHub Actions and shared with the other CaddyBuilds images through [caddy-base](https://github.com/CaddyBuilds/caddy-base). This repo holds only what is specific to this image: the `Dockerfile` (module list), `caddy-image.json` (title, description, verified module) and three thin workflows that call the shared ones.
 
 1. **Daily release check** -- A scheduled workflow queries the GitHub API for new [Caddy releases](https://github.com/caddyserver/caddy/releases) and verifies the official Docker image is available with all required platforms before triggering a build.
 
@@ -386,6 +386,8 @@ The build pipeline is fully automated via GitHub Actions and shared with the oth
 5. **Fork-friendly** -- Image names are derived from the `GITHUB_REPOSITORY` environment variable, so forks produce correctly named images without any configuration changes.
 
 6. **Failure notifications** -- If a build fails, a GitHub issue is automatically created for visibility.
+
+7. **Vulnerability scans** -- [Trivy](https://trivy.dev) scans the published `latest` and `slim` images daily and after every build. Results go to the repo's code scanning alerts and, readable by anyone, to the summary of each [Scan Images run](https://github.com/caddybuilds/caddy-cloudflare/actions/workflows/scan-images.yml). Fixes arrive through rebuilds, not dependency pins, so a finding stays open until Caddy, a module or the base image ships the fix.
 
 ## Building Your Own Image
 
