@@ -1,0 +1,23 @@
+name: Scan Images
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_run:
+    workflows: [Build and Push Docker Image]
+    types: [completed]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: read
+  security-events: write
+
+jobs:
+  scan:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    uses: CaddyBuilds/caddy-base/.github/workflows/scan-image.yml@v1
